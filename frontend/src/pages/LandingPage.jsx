@@ -67,7 +67,7 @@ const LandingPage = () => {
 
                 <div className="container" style={{ position: 'relative', zIndex: 10 }}>
                     <motion.div initial="hidden" animate="visible" variants={fadeIn}>
-                        <h1 style={{ fontWeight: '800', textTransform: 'uppercase', marginBottom: '32px', letterSpacing: '0.2em' }}>KC <br />RESTAURANT.</h1>
+                        <h1 style={{ fontWeight: '800', textTransform: 'uppercase', marginBottom: '32px', letterSpacing: '0.2em' }}>KC <br />RESTAURANT</h1>
                         <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '18px', fontWeight: '400', marginBottom: '40px', letterSpacing: '0.05em' }}>
                             Scan. Order. Enjoy. No waiters, no waiting.
                         </p>
@@ -159,7 +159,7 @@ const LandingPage = () => {
             {/* SECTION 5 — FOOTER */}
             <footer style={{ padding: '80px 0', borderTop: '1px solid var(--card-border)', background: '#0A0A0B' }}>
                 <div className="container" style={{ textAlign: 'center' }}>
-                    <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.3em', marginBottom: '24px', fontWeight: '700' }}>KC RESTAURANT.</h3>
+                    <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.3em', marginBottom: '24px', fontWeight: '700' }}>KC RESTAURANT</h3>
                     <p style={{ fontSize: '13px', color: 'var(--text-dim)', marginBottom: '32px' }}>Powered by QR Ordering</p>
                     
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '40px', color: '#888', fontSize: '14px', maxWidth: '600px', margin: '0 auto 40px' }}>
