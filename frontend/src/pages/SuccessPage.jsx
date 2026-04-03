@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
+import { Volume2, VolumeX } from 'lucide-react';
 
 const socket = io('http://localhost:5000');
 
@@ -9,18 +10,27 @@ const SuccessPage = () => {
     const navigate = useNavigate();
     const { token, orderId, items, total, tableNumber } = location.state || {};
     const [status, setStatus] = useState('paid');
+    const [soundEnabled, setSoundEnabled] = useState(true);
+    const audioRef = React.useRef(new Audio('/user-bell.wav'));
 
     useEffect(() => {
         if (!orderId) return;
 
         socket.on('order-status-update', (data) => {
             if (data.id === orderId) {
+                const prevStatus = status;
                 setStatus(data.status);
+                
+                // Play sound ONLY when moving TO ready state
+                if (data.status === 'ready' && prevStatus !== 'ready' && soundEnabled && audioRef.current) {
+                    audioRef.current.currentTime = 0;
+                    audioRef.current.play().catch(e => console.log("Customer audio error:", e));
+                }
             }
         });
 
         return () => socket.off('order-status-update');
-    }, [orderId]);
+    }, [orderId, status, soundEnabled]);
 
     const getStatusText = () => {
         if (status === 'ready') return "Ready for take away";
@@ -86,6 +96,8 @@ const SuccessPage = () => {
                     position: 'relative',
                     boxShadow: '0 0 60px rgba(201,169,110,0.06)'
                 }}>
+                    {/* Volume Toggle removed */}
+
                     <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#555', marginBottom: '12px' }}>
                             Collection Token

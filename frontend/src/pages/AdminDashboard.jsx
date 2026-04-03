@@ -28,6 +28,7 @@ const AdminDashboard = () => {
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
     const [soundEnabled, setSoundEnabled] = useState(true);
     const [toasts, setToasts] = useState([]);
+    const audioRef = React.useRef(new Audio('/bell.wav'));
 
     // Category / Filter States
     const [categoryFilter, setCategoryFilter] = useState('All');
@@ -87,9 +88,10 @@ const AdminDashboard = () => {
             const toastId = Date.now();
             setToasts(prev => [...prev, { id: toastId, token: data.token_number }]);
             setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== toastId)); }, 4000);
-            if (soundEnabled) {
-                const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3');
-                audio.play().catch(() => {});
+            
+            if (audioRef.current && soundEnabled) {
+                audioRef.current.currentTime = 0;
+                audioRef.current.play().catch(e => console.error("Audio trigger failed:", e));
             }
         });
 
@@ -209,7 +211,17 @@ const AdminDashboard = () => {
                     
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                         <div style={{ fontSize: '13px', color: '#555' }}>{currentTime}</div>
-                        <button onClick={() => setSoundEnabled(!soundEnabled)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: soundEnabled ? 'white' : '#555' }}>
+                        <button 
+                            onClick={() => {
+                                const newVal = !soundEnabled;
+                                setSoundEnabled(newVal);
+                                if (newVal && audioRef.current) {
+                                    audioRef.current.currentTime = 0;
+                                    audioRef.current.play().catch(e => console.log("Prime error:", e));
+                                }
+                            }} 
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: soundEnabled ? 'white' : '#555' }}
+                        >
                             {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
                         </button>
                     </div>
