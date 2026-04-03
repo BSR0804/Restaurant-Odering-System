@@ -1,23 +1,24 @@
 # 🍽️ Kitchen Caboodle: High-Performance Restaurant OS
 
-A professional, real-time dining and operations ecosystem designed for modern restaurants. This platform bridges the gap between the kitchen and the customer with sub-second synchronization and ultra-clean, high-density aesthetics.
+A professional, real-time dining and operations ecosystem designed for modern restaurants. This platform bridges the gap between the kitchen and the customer with sub-second synchronization, ultra-clean high-density aesthetics, and high-fidelity auditory signaling.
 
 ---
 
 ## ⚡ Core Features
 
-### 1. Real-Time Operations
-- **Live Order Dashboard**: Admins receive instant notifications with audio alerts when a customer places an order.
-- **Fulfillment States**: Orders transition through "Live", "Ready", and "Completed" states, synced instantly to the customer's device.
-- **Real-Time Inventory**: Toggle "Available / Sold Out" status for any dish; changes propagate to all connected diners in under 0.5s.
+### 1. Neural Audio Orchestration 🔔
+- **Unique Auditory Signatures**: 
+  - **Admin**: "Bell" alert for every new incoming order.
+  - **Customer**: "Happy Bells" high-fidelity notification specifically when their order is marked as **Ready**.
+- **Browser-Interaction Priming**: Smart logic that "unlocks" browser audio permissions, ensuring alerts fire even on dimmed mobile screens.
+- **Local-Asset Reliability**: All signals are served as local `.wav` files for zero-latency, offline-capable alerting.
 
-### 2. Intelligent Diner Experience
-- **Dietary Orchestration**: High-fidelity "Veg" and "Non-Veg" filters with custom Indian dietary icons (Square/Triangle).
-- **Mutually Exclusive Filters**: Smart logic that deactivates the opposite filter for a focused browsing experience.
-- **Micro-Animations**: Silky-smooth layout transitions using Framer Motion for a premium, app-like feel.
-- **Safety Lock**: Automatic ejection of "Unavailable" items from customer carts with instant visual warnings.
+### 2. Real-Time Operations ⚡
+- **Live Order Dashboard**: Admins receive instant, mission-critical notifications with visual toasts and audio pings.
+- **Fulfillment States**: Orders transition through "Live", "Ready", and "Completed" states, synced instantly to the customer's dashboard.
+- **Inventory Orchestration**: Toggle "Available / Sold Out" status for any dish; changes propagate to all connected diners in under 0.5s.
 
-### 3. Business Telemetry
+### 3. Business Telemetry 📊
 - **Live Revenue Tracker**: Real-time calculation of today's total earnings displayed on the admin header.
 - **Precision Archive**: Detailed order history showing item-level quantity metrics (e.g., *x1, x2*).
 - **QR-DRIVEN**: Dynamic table mapping via QR codes for zero-friction ordering.
@@ -66,18 +67,6 @@ npm run dev
 ```
 *Access the app typically at `http://localhost:5173`.*
 
-### 3. Operational Access
-- **Admin Dashboard**: `http://localhost:5173/admin`
-- **Credentials**: `admin` / `admin123`
-- **Table Orders**: Use `?table=N` parameters (e.g., `?table=5`) to simulate QR scans.
-
----
-
-## 📊 Database Schema
-The system utilizes a relational model for high-integrity operations:
-- **`menu`**: Stores dish name, category, price, type (veg/non-veg), and real-time `is_available` status.
-- **`orders`**: Tracks live fulfillment states, table assignments, and financial totals.
-
 ---
 
 ## 🎨 Visual Language
@@ -88,4 +77,17 @@ The system utilizes a relational model for high-integrity operations:
 ---
 
 > [!TIP]
-> To ensure real-time synchronization is active, verify that the **"Connected"** status dot in the admin sidebar is green.
+> **Audio Tip**: Ensure the **Volume Toggle** on the Admin Dashboard is ON to activate the mission-critical alert system. For customers, hearing the "Ready" bell works best if they tap the screen once after the page loads! 🧑‍🍳🔔✨
+
+---
+
+## 🔗 Project Entry Points
+
+| Portal | URL |
+| :--- | :--- |
+| **Customer Interface** | [http://localhost:5173](http://localhost:5173) |
+| **Admin Dashboard** | [http://localhost:5173/admin](http://localhost:5173/admin) |
+
+### 🔐 Administrative Access
+- **Username**: `admin`
+- **Password**: `admin123`
