@@ -1,0 +1,293 @@
+:root {
+  --bg: #0A0A0B;
+  --bg-subtle: #0D0D0F;
+  --text: #FFFFFF;
+  --text-muted: rgba(255, 255, 255, 0.6);
+  --text-dim: #999999;
+  --primary: #F5F0E8; 
+  --accent: #C9A96E;  
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --glass: rgba(255, 255, 255, 0.04);
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+h1 { font-size: 72px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin: 0; transition: font-size 0.3s ease; }
+h2 { font-size: 40px; font-weight: 500; letter-spacing: -0.01em; margin: 0; transition: font-size 0.3s ease; }
+h3 { font-size: 22px; font-weight: 500; margin: 0; }
+p { color: var(--text-dim); line-height: 1.6; }
+
+section {
+  position: relative;
+  width: 100%;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 40px;
+}
+
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+}
+
+/* Buttons */
+.btn-primary {
+  background: var(--primary);
+  color: #000;
+  border: none;
+  padding: 16px 32px;
+  min-height: 48px;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.btn-primary:hover {
+  background: var(--accent);
+  transform: translateY(-2px);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 16px 32px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-ghost:hover {
+  border-color: #fff;
+  background: rgba(255,255,255,0.05);
+}
+
+/* Marquee */
+.marquee-container {
+  width: 100%;
+  overflow: hidden;
+  background: #121214;
+  padding: 16px 0;
+  border-top: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--card-border);
+}
+
+.marquee-content {
+  display: flex;
+  white-space: nowrap;
+  animation: marquee 30s linear infinite;
+}
+
+.marquee-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-right: 80px;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-weight: 500;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Animations */
+@keyframes kenburns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.03); }
+}
+
+.kenburns-bg {
+  animation: kenburns 8s ease-out forwards;
+}
+
+/* Dot Grid Pattern */
+.dot-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 0);
+  background-size: 40px 40px;
+}
+
+/* Scroll Fade In Animation Utilities */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Menu Page Overrides */
+.screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.category-chip {
+  padding: 8px 20px;
+  background: transparent;
+  border: 1px solid var(--card-border);
+  border-radius: 99px;
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.category-chip.active {
+  background: var(--primary);
+  color: #000;
+  border-color: var(--primary);
+}
+
+.menu-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.category-header {
+  margin: 80px 0 32px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.category-header::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--card-border);
+}
+
+.cart-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  max-width: 500px;
+  background: #fff;
+  color: #000;
+  padding: 18px 24px;
+  border-radius: 99px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+  cursor: pointer;
+  z-index: 1000;
+}
+
+.btn-add {
+  background: var(--card-bg);
+  color: var(--text);
+  border: 1px solid var(--card-border);
+  padding: 8px 20px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add:hover {
+  background: var(--primary);
+  color: #000;
+}
+
+.category-scroll-wrapper {
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  -webkit-overflow-scrolling: touch;
+}
+
+.container::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  h1 { font-size: 60px; }
+  .container { padding: 0 32px; }
+}
+
+@media (max-width: 768px) {
+  h1 { font-size: 48px; }
+  h2 { font-size: 32px; }
+  .container { padding: 0 24px; }
+  .btn-primary, .btn-ghost { padding: 14px 28px; font-size: 14px; }
+}
+
+/* Desktop Logo Default */
+.logo-container {
+    height: 100px;
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 36px; letter-spacing: -0.01em; }
+  h2 { font-size: 28px; }
+  .container { padding: 0 20px; }
+  .btn-primary, .btn-ghost { width: 100%; justify-content: center; padding: 12px 24px; }
+  .marquee-item { font-size: 10px; margin-right: 40px; }
+  
+  /* Mobile Logo scale */
+  .logo-container {
+      height: 60px !important;
+      top: 24px !important;
+      left: 24px !important;
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) {
+  .btn-primary:hover, .btn-ghost:hover {
+    transform: none;
+  }
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}

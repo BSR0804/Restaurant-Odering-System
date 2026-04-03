@@ -1,0 +1,54 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Build outputs
+dist/
+build/
+.output/
+.nuxt/
+.next/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database
+backend/restaurant.db
+backend/restaurant.db-shm
+backend/restaurant.db-wal
+backend/view_db.js
+
+# QR Codes
+backend/qrcodes/*.png
+
+# Editor and IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project specific
+KC logo.jfif
+Menu 1.jpeg
+Menu 2.jpeg
+Pic 1.webp
+pic 2.jpg
+frontend/public/logo.jfif
+frontend/public/hero-1.webp
+frontend/public/hero-2.webp
+frontend/public/hero-3.webp
+frontend/public/hero-4.webp
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Other
+.DS_Store
+Thumbs.db

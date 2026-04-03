@@ -1,0 +1,56 @@
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
+import MenuPage from './pages/MenuPage';
+import CheckoutPage from './pages/CheckoutPage';
+import SuccessPage from './pages/SuccessPage';
+import AdminDashboard from './pages/AdminDashboard';
+import './index.css';
+
+function App() {
+  const [cart, setCart] = useState([]);
+  const [table, setTable] = useState(null);
+
+  useEffect(() => {
+    // Basic table detection from URL ?table=X
+    const params = new URLSearchParams(window.location.search);
+    const tableId = params.get('table');
+    if (tableId) setTable(tableId);
+  }, []);
+
+  const addToCart = (item) => {
+    setCart(prev => {
+      const existing = prev.find(i => i.id === item.id);
+      if (existing) {
+        return prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i);
+      }
+      return [...prev, { ...item, qty: 1 }];
+    });
+  };
+
+  const removeFromCart = (item) => {
+      setCart(prev => {
+          const existing = prev.find(i => i.id === item.id);
+          if (existing && existing.qty > 1) {
+              return prev.map(i => i.id === item.id ? { ...i, qty: i.qty - 1 } : i);
+          }
+          return prev.filter(i => i.id !== item.id);
+      });
+  };
+
+  const clearCart = () => setCart([]);
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/menu" element={<MenuPage cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} tableNumber={table} />} />
+        <Route path="/checkout" element={<CheckoutPage cart={cart} clearCart={clearCart} tableNumber={table} />} />
+        <Route path="/success" element={<SuccessPage />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
