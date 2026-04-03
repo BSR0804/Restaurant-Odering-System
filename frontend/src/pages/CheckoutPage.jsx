@@ -86,7 +86,14 @@ const CheckoutPage = ({ cart, clearCart, tableNumber }) => {
           
           if (res.data.success) {
               clearCart();
-              navigate('/success', { state: { token: res.data.token, items: cart, total: cartTotal } });
+              const totalWithTax = (cartTotal * 1.05).toFixed(2);
+              navigate('/success', { state: { 
+                token: res.data.token, 
+                orderId: res.data.order_id, 
+                items: cart, 
+                total: totalWithTax, 
+                tableNumber 
+              } });
           }
       } catch (err) {
           console.error(err);

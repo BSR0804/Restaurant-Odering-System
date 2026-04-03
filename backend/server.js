@@ -144,6 +144,62 @@ app.patch('/api/admin/orders/:id', (req, res) => {
 
     try {
         db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(status, id);
+        
+        // Notify all clients (or just the specific one if we had order-specific rooms)
+        // For simplicity in this scale, we broadcast, and clients filter by their own ID/Token
+        io.emit('order-status-update', { id: parseInt(id), status });
+        
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET: Order History (Today's completed orders)
+app.get('/api/history/orders', (req, res) => {
+  try {
+    const orders = db.prepare("SELECT * FROM orders WHERE status = 'completed' AND date(created_at) = date('now') ORDER BY created_at DESC").all();
+    const formattedOrders = orders.map(order => ({
+      ...order,
+      items: JSON.parse(order.items)
+    }));
+    res.json(formattedOrders);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH: Toggle Menu Item Availability (Individual)
+app.patch('/api/menu/:id/availability', (req, res) => {
+    const { is_available } = req.body;
+    const { id } = req.params;
+
+    try {
+        db.prepare('UPDATE menu SET is_available = ? WHERE id = ?').run(is_available ? 1 : 0, id);
+        
+        // Broadcast the specific change
+        io.emit('menu_update', { id: parseInt(id), is_available: !!is_available });
+        
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// BATCH: Toggle Menu Item Availability (Bulk)
+app.post('/api/menu/batch-availability', (req, res) => {
+    const { ids, is_available } = req.body;
+
+    try {
+        const stmt = db.prepare('UPDATE menu SET is_available = ? WHERE id = ?');
+        const updateBatch = db.transaction((itemIds) => {
+            for (const id of itemIds) {
+                stmt.run(is_available ? 1 : 0, id);
+                io.emit('menu_update', { id: parseInt(id), is_available: !!is_available });
+            }
+        });
+
+        updateBatch(ids);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });

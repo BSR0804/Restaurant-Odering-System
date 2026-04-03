@@ -1,17 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
-import { Bell, Clock, MapPin, LogOut } from 'lucide-react';
+import { 
+  LayoutGrid, 
+  History, 
+  Settings, 
+  Volume2, 
+  VolumeX, 
+  Clock, 
+  MapPin, 
+  CheckCircle, 
+  XCircle,
+  Loader2
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const socket = io('http://localhost:5000');
 
 const AdminDashboard = () => {
     const [orders, setOrders] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [history, setHistory] = useState([]);
+    const [fullMenu, setFullMenu] = useState([]);
+    const [activeTab, setActiveTab] = useState('live');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loginData, setLoginData] = useState({ user: '', pass: '' });
-    const [error, setError] = useState(null);
+    const [isConnected, setIsConnected] = useState(socket.connected);
+    const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
+    const [soundEnabled, setSoundEnabled] = useState(true);
+    const [toasts, setToasts] = useState([]);
+
+    // Category / Filter States
+    const [categoryFilter, setCategoryFilter] = useState('All');
+    const [statusFilter, setStatusFilter] = useState('All');
+    const [loadingItems, setLoadingItems] = useState([]);
+    const [flashingItems, setFlashingItems] = useState([]);
 
     const handleLogin = (e) => {
         e.preventDefault();
@@ -23,117 +45,292 @@ const AdminDashboard = () => {
     };
 
     useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date().toLocaleTimeString());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const fetchData = async () => {
         if (!isAuthenticated) return;
+        try {
+            const resOrders = await axios.get('http://localhost:5000/api/admin/orders');
+            setOrders(resOrders.data || []);
+        } catch (e) { console.error(e); }
 
-        const fetchOrders = () => {
-            setLoading(true);
-            axios.get('http://localhost:5000/api/admin/orders')
-                .then(res => {
-                    setOrders(res.data);
-                    setError(null);
-                })
-                .catch(err => {
-                    console.error('Fetch Error:', err);
-                    setError('Failed to fetch orders. Check backend connection.');
-                })
-                .finally(() => {
-                    setLoading(false);
-                });
-        };
+        try {
+            const resHistory = await axios.get('http://localhost:5000/api/history/orders');
+            setHistory(resHistory.data || []);
+        } catch (e) { console.error(e); }
 
-        fetchOrders();
+        try {
+            const resMenu = await axios.get('http://localhost:5000/api/menu');
+            const rawData = resMenu.data || [];
+            const items = Array.isArray(rawData[0]?.items) ? rawData.flatMap(cat => cat.items) : rawData;
+            setFullMenu(items);
+        } catch (e) { console.error(e); }
+    };
 
-        socket.emit('join-dashboard');
-        
-        const handleNewOrder = (data) => {
+    useEffect(() => {
+        if (!isAuthenticated) return;
+        fetchData();
+
+        socket.on('connect', () => {
+            setIsConnected(true);
+            socket.emit('join-dashboard');
+        });
+        socket.on('disconnect', () => setIsConnected(false));
+        if (socket.connected) { socket.emit('join-dashboard'); setIsConnected(true); }
+
+        socket.on('new-order', (data) => {
             setOrders(prev => [data, ...prev]);
-            const badge = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3');
-            badge.play().catch(() => {});
-        };
+            const toastId = Date.now();
+            setToasts(prev => [...prev, { id: toastId, token: data.token_number }]);
+            setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== toastId)); }, 4000);
+            if (soundEnabled) {
+                const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3');
+                audio.play().catch(() => {});
+            }
+        });
 
-        socket.on('new-order', handleNewOrder);
+        socket.on('menu_update', (data) => {
+            setFullMenu(prev => prev.map(item => item.id === data.id ? { ...item, is_available: data.is_available } : item));
+            setFlashingItems(prev => [...prev, data.id]);
+            setTimeout(() => { setFlashingItems(prev => prev.filter(id => id !== data.id)); }, 3000);
+        });
 
         return () => {
-            socket.off('new-order', handleNewOrder);
+            socket.off('connect');
+            socket.off('disconnect');
+            socket.off('new-order');
+            socket.off('menu_update');
         };
-    }, [isAuthenticated]);
+    }, [isAuthenticated, soundEnabled]);
 
-    const updateStatus = async (id, newStatus) => {
+    const toggleAvailability = async (item) => {
+        const newStatus = !item.is_available;
+        setFullMenu(prev => prev.map(i => i.id === item.id ? { ...i, is_available: newStatus } : i));
+        setLoadingItems(prev => [...prev, item.id]);
+
         try {
-            await axios.patch(`http://localhost:5000/api/admin/orders/${id}`, { status: newStatus });
-            if (newStatus === 'completed') {
-                setOrders(prev => prev.filter(o => o.id !== id));
-            } else {
-                setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
-            }
+            await axios.patch(`http://localhost:5000/api/menu/${item.id}/availability`, { is_available: newStatus });
         } catch (err) {
-            console.error(err);
+            setFullMenu(prev => prev.map(i => i.id === item.id ? { ...i, is_available: item.is_available } : i));
+            setToasts(prev => [...prev, { id: Date.now(), token: `Failed to update ${item.name}`, error: true }]);
+        } finally {
+            setLoadingItems(prev => prev.filter(id => id !== item.id));
         }
     };
 
+    const updateOrderStatus = async (id, newStatus) => {
+        try {
+            await axios.patch(`http://localhost:5000/api/admin/orders/${id}`, { status: newStatus });
+            if (newStatus === 'completed') {
+                const orderToMove = orders.find(o => o.id === id);
+                setOrders(prev => prev.filter(o => o.id !== id));
+                setHistory(prev => [{...orderToMove, status: 'completed'}, ...prev]);
+            } else {
+                setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
+            }
+        } catch (err) { console.error(err); }
+    };
+
+    const categories = [...new Set(fullMenu.map(i => i.category))];
+    useEffect(() => {
+        if (categories.length > 0 && categoryFilter === 'All') {
+            setCategoryFilter(categories[0]);
+        }
+    }, [fullMenu]);
+
+    const filteredMenu = fullMenu.filter(item => {
+        const catMatch = item.category === categoryFilter;
+        const statusMatch = statusFilter === 'All' || 
+                            (statusFilter === 'Available' && item.is_available) || 
+                            (statusFilter === 'Unavailable' && !item.is_available);
+        return catMatch && statusMatch;
+    });
+
     if (!isAuthenticated) return (
-        <div className="screen container" style={{ justifyContent: 'center' }}>
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass" style={{ padding: '40px' }}>
-                <h2 className="gradient-text" style={{ marginBottom: '20px' }}>Staff Portal</h2>
-                <form onSubmit={handleLogin}>
-                    <input type="text" placeholder="Username" className="glass" style={{ width: '100%', padding: '12px', marginBottom: '15px', color: 'white' }} onChange={(e) => setLoginData({...loginData, user: e.target.value})} />
-                    <input type="password" placeholder="Password" className="glass" style={{ width: '100%', padding: '12px', marginBottom: '25px', color: 'white' }} onChange={(e) => setLoginData({...loginData, pass: e.target.value})} />
-                    <button className="btn-primary" style={{ width: '100%' }}>Enter Dashboard</button>
+        <div className="screen animate-global-fade" style={{ background: '#0A0A0B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: '360px', padding: '40px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px' }}>
+                <h2 style={{ fontSize: '20px', fontWeight: '500', color: 'white', marginBottom: '8px' }}>Staff Portal</h2>
+                <form onSubmit={handleLogin} style={{ marginTop: '32px' }}>
+                    <input type="text" placeholder="Username" style={{ width: '100%', height: '48px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '0 16px', color: 'white', fontSize: '14px', marginBottom: '16px' }} onChange={(e) => setLoginData({...loginData, user: e.target.value})} />
+                    <input type="password" placeholder="Password" style={{ width: '100%', height: '48px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '0 16px', color: 'white', fontSize: '14px', marginBottom: '32px' }} onChange={(e) => setLoginData({...loginData, pass: e.target.value})} />
+                    <button className="btn-primary" style={{ width: '100%', height: '48px', borderRadius: '12px' }}>Enter Dashboard</button>
                 </form>
             </motion.div>
         </div>
     );
 
-    if (loading) return (
-        <div className="screen container glass" style={{ justifyContent: 'center', alignItems: 'center' }}>
-             <p className="animate-in">Connecting to Live Feed...</p>
-        </div>
-    );
-
-    if (error) return (
-        <div className="screen container glass" style={{ justifyContent: 'center', alignItems: 'center' }}>
-             <p style={{ color: 'var(--primary)', marginBottom: '20px' }}>{error}</p>
-             <button className="btn-primary" onClick={() => window.location.reload()}>Retry</button>
-        </div>
-    );
-
     return (
-        <div className="screen dashboard" style={{ padding: '0px' }}>
-            <div className="glass" style={{ height: '70px', margin: '20px', padding: '0 25px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <Bell size={18} color="var(--primary)" />
-                    <h1 style={{ fontSize: '20px', fontWeight: '800' }}>Orders Dashboard</h1>
+        <div className="dashboard-wrapper">
+            <aside className="dashboard-sidebar">
+                <div style={{ padding: '24px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '500', color: 'white' }}>Kitchen Caboodle</div>
+                    <div style={{ fontSize: '11px', color: '#555', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Owner dashboard</div>
                 </div>
-                <div className="glass" style={{ padding: '5px 15px', color: 'var(--success)', fontWeight: 'bold', fontSize: '14px' }}>LIVE</div>
-            </div>
 
-            <div className="container" style={{ maxWidth: '1200px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '25px' }}>
-                    <AnimatePresence>
-                        {orders.map((order, index) => (
-                            <motion.div key={order.id} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }} className="glass admin-card">
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                                    <div style={{ fontWeight: '800', fontSize: '24px', color: 'var(--primary)' }}>{order.token_number}</div>
-                                    <div className={`status-badge status-${order.status}`}>{order.status}</div>
-                                </div>
-                                <div style={{ marginBottom: '15px', display: 'flex', gap: '10px' }}>
-                                    <MapPin size={14} /> <span>Table #{order.table_number}</span>
-                                    <Clock size={14} style={{ marginLeft: '10px' }} /> <span>{new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                </div>
-                                <div className="glass" style={{ padding: '10px', marginBottom: '15px', background: 'rgba(0,0,0,0.2)', border: 'none' }}>
-                                    {order.items.map(item => (
-                                        <div key={item.id} style={{ fontSize: '14px', marginBottom: '5px' }}>{item.name} x {item.qty}</div>
-                                    ))}
-                                </div>
-                                <div style={{ display: 'flex', gap: '10px' }}>
-                                    {order.status === 'paid' && <button className="btn-primary" style={{ flex: 1, background: '#ffd166', color: '#000' }} onClick={() => updateStatus(order.id, 'ready')}>READY</button>}
-                                    <button className="btn-primary" style={{ flex: 1 }} onClick={() => updateStatus(order.id, 'completed')}>COMPLETE</button>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </AnimatePresence>
-                    {orders.length === 0 && <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '100px', opacity: 0.5 }}>Waiting for orders...</div>}
+                <nav style={{ padding: '16px' }}>
+                    <button onClick={() => setActiveTab('live')} style={{ width: '100%', height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', border: 'none', cursor: 'pointer', borderRadius: '8px', background: activeTab === 'live' ? 'rgba(255,255,255,0.05)' : 'transparent', color: activeTab === 'live' ? 'white' : '#888', transition: 'all 0.2s' }}>
+                        <LayoutGrid size={16} /> Live orders
+                    </button>
+                    <button onClick={() => setActiveTab('history')} style={{ width: '100%', height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', border: 'none', cursor: 'pointer', borderRadius: '8px', background: activeTab === 'history' ? 'rgba(255,255,255,0.05)' : 'transparent', color: activeTab === 'history' ? 'white' : '#888', transition: 'all 0.2s', marginTop: '8px' }}>
+                        <History size={16} /> Order history
+                    </button>
+                    <button onClick={() => setActiveTab('settings')} style={{ width: '100%', height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', border: 'none', cursor: 'pointer', borderRadius: '8px', background: activeTab === 'settings' ? 'rgba(255,255,255,0.05)' : 'transparent', color: activeTab === 'settings' ? 'white' : '#888', transition: 'all 0.2s', marginTop: '8px' }}>
+                        <Settings size={16} /> Menu settings
+                    </button>
+                </nav>
+
+                <div style={{ marginTop: 'auto', padding: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div className={`status-dot ${isConnected ? 'status-dot-green' : 'status-dot-red'}`} />
+                    <span style={{ fontSize: '12px', color: '#555' }}>{isConnected ? 'Connected' : 'Syncing...'}</span>
                 </div>
+            </aside>
+
+            <main className="dashboard-main">
+                <header style={{ height: '56px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', background: '#080809' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{ fontSize: '16px', fontWeight: '500', color: 'white' }}>
+                            {activeTab === 'live' ? 'Live orders' : activeTab === 'history' ? 'Order history' : 'Menu settings'}
+                        </span>
+                        {activeTab === 'settings' && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '2px 8px', background: 'rgba(34,197,94,0.1)', color: '#22c55e', borderRadius: '4px', fontSize: '10px', fontWeight: '600' }}>
+                                <motion.div animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} style={{ width: '4px', height: '4px', background: '#22c55e', borderRadius: '50%' }} /> Live
+                            </div>
+                        )}
+                        {activeTab === 'history' && (
+                            <div style={{ padding: '2px 10px', borderRadius: '99px', background: 'rgba(201,169,110,0.1)', border: '1px solid rgba(201,169,110,0.2)', color: '#C9A96E', fontSize: '11px', fontWeight: '600' }}>
+                                TODAY'S REVENUE: ₹{history.reduce((sum, h) => sum + h.total_amount, 0).toLocaleString()}
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                        <div style={{ fontSize: '13px', color: '#555' }}>{currentTime}</div>
+                        <button onClick={() => setSoundEnabled(!soundEnabled)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: soundEnabled ? 'white' : '#555' }}>
+                            {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+                        </button>
+                    </div>
+                </header>
+
+                <div style={{ padding: '24px' }}>
+                    {activeTab === 'settings' && (
+                        <div style={{ marginBottom: '24px' }}>
+                            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '4px' }}>
+                                {categories.map(cat => (
+                                    <button key={cat} onClick={() => setCategoryFilter(cat)} style={{ padding: '6px 14px', borderRadius: '99px', fontSize: '12px', border: '1px solid', transition: 'all 0.2s', cursor: 'pointer', background: categoryFilter === cat ? 'rgba(255,255,255,0.08)' : 'transparent', borderColor: categoryFilter === cat ? 'transparent' : 'rgba(255,255,255,0.07)', color: categoryFilter === cat ? 'white' : '#555' }}>
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '4px', width: 'fit-content' }}>
+                                {['Available', 'Unavailable'].map(stat => (
+                                    <button key={stat} onClick={() => setStatusFilter(stat)} style={{ padding: '4px 16px', borderRadius: '6px', fontSize: '11px', border: 'none', cursor: 'pointer', background: statusFilter === stat ? 'rgba(255,255,255,0.07)' : 'transparent', color: statusFilter === stat ? 'white' : '#555', transition: 'all 0.2s' }}>
+                                        {stat}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'live' ? (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+                            <AnimatePresence>
+                                {orders.map(order => (
+                                    <motion.div key={order.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '20px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                                            <span style={{ fontSize: '18px', fontWeight: 'bold', color: 'white' }}>{order.token_number}</span>
+                                            <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#555' }}>Table {order.table_number}</span>
+                                        </div>
+                                        <div style={{ marginBottom: '20px' }}>
+                                            {order.items.map(item => (
+                                                <div key={item.id} style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>{item.name} × {item.qty}</div>
+                                            ))}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button 
+                                                disabled={order.status === 'ready'}
+                                                onClick={() => updateOrderStatus(order.id, 'ready')} 
+                                                style={{ 
+                                                    flex: 1, background: order.status === 'ready' ? 'rgba(201,169,110,0.02)' : 'rgba(201,169,110,0.1)', 
+                                                    color: order.status === 'ready' ? '#444' : '#C9A96E', 
+                                                    border: order.status === 'ready' ? '1px solid rgba(255,255,255,0.03)' : '1px solid rgba(201,169,110,0.2)', 
+                                                    padding: '8px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold',
+                                                    cursor: order.status === 'ready' ? 'not-allowed' : 'pointer',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                {order.status === 'ready' ? 'READY' : 'MARK READY'}
+                                            </button>
+                                            <button onClick={() => updateOrderStatus(order.id, 'completed')} style={{ flex: 1, background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: 'none', padding: '8px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold' }}>COMPLETE</button>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
+                        </div>
+                    ) : activeTab === 'history' ? (
+                        <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '12px', overflow: 'hidden' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead style={{ background: 'rgba(255,255,255,0.01)' }}>
+                                    <tr style={{ textAlign: 'left', fontSize: '11px', color: '#444' }}>
+                                        <th style={{ padding: '16px 24px' }}>Token</th>
+                                        <th style={{ padding: '16px 24px' }}>Items</th>
+                                        <th style={{ padding: '16px 24px' }}>Table</th>
+                                        <th style={{ padding: '16px 24px' }}>Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody style={{ fontSize: '13px', color: '#888' }}>
+                                    {history.map(row => (
+                                        <tr key={row.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                            <td style={{ padding: '16px 24px', color: 'white' }}>{row.token_number}</td>
+                                            <td style={{ padding: '16px 24px' }}>
+                                                {row.items.map((i, idx) => (
+                                                    <span key={idx}>
+                                                        {i.name} x{i.qty}
+                                                        {idx < row.items.length - 1 ? ', ' : ''}
+                                                    </span>
+                                                ))}
+                                            </td>
+                                            <td style={{ padding: '16px 24px' }}>{row.table_number}</td>
+                                            <td style={{ padding: '16px 24px' }}>₹{row.total_amount}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {filteredMenu.map(item => (
+                                <div key={item.id} onClick={() => toggleAvailability(item)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px', padding: '0 24px', background: flashingItems.includes(item.id) ? 'rgba(201,169,110,0.06)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.02)', cursor: 'pointer', opacity: loadingItems.includes(item.id) ? 0.7 : 1 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <span style={{ fontSize: '14px', color: item.is_available ? 'white' : '#555', fontWeight: '500' }}>{item.name}</span>
+                                        <span style={{ fontSize: '9px', background: 'rgba(255,255,255,0.03)', color: '#444', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>{item.category}</span>
+                                    </div>
+
+                                    {/* IOS TOGGLE */}
+                                    <div style={{ width: '40px', height: '22px', borderRadius: '11px', background: item.is_available ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)', border: `1px solid ${item.is_available ? 'rgba(34,197,94,0.4)' : 'rgba(255,255,255,0.1)'}`, position: 'relative', padding: '2px' }}>
+                                        <motion.div animate={{ x: item.is_available ? 18 : 0 }} style={{ width: '16px', height: '16px', borderRadius: '50%', background: item.is_available ? '#22c55e' : '#444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            {loadingItems.includes(item.id) && <Loader2 size={10} className="animate-spin" />}
+                                        </motion.div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </main>
+
+            {/* TOASTS */}
+            <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 1000 }}>
+                {toasts.map(t => (
+                    <div key={t.id} style={{ background: t.error ? '#ef4444' : '#0D0D10', color: 'white', padding: '12px 24px', borderRadius: '12px', marginBottom: '8px', fontSize: '14px', boxShadow: '0 12px 24px rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        {t.error ? <XCircle size={18} /> : <CheckCircle size={18} />}
+                        {t.token}
+                    </div>
+                ))}
             </div>
         </div>
     );

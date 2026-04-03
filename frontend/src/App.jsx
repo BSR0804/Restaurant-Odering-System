@@ -5,11 +5,24 @@ import MenuPage from './pages/MenuPage';
 import CheckoutPage from './pages/CheckoutPage';
 import SuccessPage from './pages/SuccessPage';
 import AdminDashboard from './pages/AdminDashboard';
-import './index.css';
+import { io } from 'socket.io-client';
+
+const socket = io('http://localhost:5000');
 
 function App() {
   const [cart, setCart] = useState([]);
   const [table, setTable] = useState(null);
+
+  useEffect(() => {
+    socket.on('menu_update', (data) => {
+      if (!data.is_available) {
+        // Automatically eject from cart if unavailable
+        setCart(prev => prev.filter(item => item.id !== data.id));
+      }
+    });
+
+    return () => socket.off('menu_update');
+  }, []);
 
   useEffect(() => {
     // Basic table detection from URL ?table=X
