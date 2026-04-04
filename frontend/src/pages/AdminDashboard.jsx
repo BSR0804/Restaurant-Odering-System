@@ -11,7 +11,12 @@ import {
   MapPin, 
   CheckCircle, 
   XCircle,
-  Loader2
+  Loader2,
+  Calendar,
+  TrendingUp,
+  BarChart3,
+  CalendarDays,
+  LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -21,8 +26,8 @@ const AdminDashboard = () => {
     const [orders, setOrders] = useState([]);
     const [history, setHistory] = useState([]);
     const [fullMenu, setFullMenu] = useState([]);
-    const [activeTab, setActiveTab] = useState('live');
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [activeTab, setActiveTab] = useState(localStorage.getItem('admin_active_tab') || 'live');
+    const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('admin_session'));
     const [loginData, setLoginData] = useState({ user: '', pass: '' });
     const [isConnected, setIsConnected] = useState(socket.connected);
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
@@ -35,14 +40,31 @@ const AdminDashboard = () => {
     const [statusFilter, setStatusFilter] = useState('All');
     const [loadingItems, setLoadingItems] = useState([]);
     const [flashingItems, setFlashingItems] = useState([]);
+    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [historySummary, setHistorySummary] = useState({ totalRevenue: 0, totalOrders: 0 });
 
     const handleLogin = (e) => {
         e.preventDefault();
+        // Secure Staff Portal Login (Credentials: admin/admin123)
         if (loginData.user === 'admin' && loginData.pass === 'admin123') {
+            localStorage.setItem('admin_session', 'active_secret_tk_' + Date.now());
             setIsAuthenticated(true);
         } else {
             alert('Invalid credentials');
         }
+    };
+
+    const handleLogout = () => {
+        if (window.confirm("Are you sure you want to sign out from the Staff Portal?")) {
+            localStorage.removeItem('admin_session');
+            localStorage.removeItem('admin_active_tab');
+            setIsAuthenticated(false);
+        }
+    };
+
+    const switchTab = (tab) => {
+        setActiveTab(tab);
+        localStorage.setItem('admin_active_tab', tab);
     };
 
     useEffect(() => {
@@ -60,8 +82,8 @@ const AdminDashboard = () => {
         } catch (e) { console.error(e); }
 
         try {
-            const resHistory = await axios.get('http://localhost:5000/api/history/orders');
-            setHistory(resHistory.data || []);
+            const resHistory = await axios.get(`http://localhost:5000/api/history/orders?date=${selectedDate}`);
+            setHistory(resHistory.data.orders || []);
         } catch (e) { console.error(e); }
 
         try {
@@ -107,7 +129,16 @@ const AdminDashboard = () => {
             socket.off('new-order');
             socket.off('menu_update');
         };
-    }, [isAuthenticated, soundEnabled]);
+    }, [isAuthenticated, soundEnabled, selectedDate]);
+
+    // REACTIVE SUMMARY CALCULATION
+    useEffect(() => {
+        const rev = history.reduce((sum, h) => sum + (parseFloat(h.total_amount) || 0), 0);
+        setHistorySummary({ 
+            totalRevenue: rev, 
+            totalOrders: history.length 
+        });
+    }, [history]);
 
     const toggleAvailability = async (item) => {
         const newStatus = !item.is_available;
@@ -174,14 +205,37 @@ const AdminDashboard = () => {
                 </div>
 
                 <nav style={{ padding: '16px' }}>
-                    <button onClick={() => setActiveTab('live')} style={{ width: '100%', height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', border: 'none', cursor: 'pointer', borderRadius: '8px', background: activeTab === 'live' ? 'rgba(255,255,255,0.05)' : 'transparent', color: activeTab === 'live' ? 'white' : '#888', transition: 'all 0.2s' }}>
-                        <LayoutGrid size={16} /> Live orders
+                    <button onClick={() => switchTab('live')} style={{ width: '100%', height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', border: 'none', cursor: 'pointer', borderRadius: '8px', background: activeTab === 'live' ? 'rgba(255,255,255,0.05)' : 'transparent', color: activeTab === 'live' ? 'white' : '#888', transition: 'all 0.2s' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <LayoutGrid size={16} /> Live orders
+                        </div>
+                        {orders.length > 0 && (
+                            <motion.span 
+                                key={orders.length}
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                style={{ 
+                                    background: '#C9A96E', 
+                                    color: 'black', 
+                                    fontSize: '10px', 
+                                    fontWeight: 'bold', 
+                                    padding: '2px 6px', 
+                                    borderRadius: '6px' 
+                                }}
+                            >
+                                {orders.length}
+                            </motion.span>
+                        )}
                     </button>
-                    <button onClick={() => setActiveTab('history')} style={{ width: '100%', height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', border: 'none', cursor: 'pointer', borderRadius: '8px', background: activeTab === 'history' ? 'rgba(255,255,255,0.05)' : 'transparent', color: activeTab === 'history' ? 'white' : '#888', transition: 'all 0.2s', marginTop: '8px' }}>
+                    <button onClick={() => switchTab('history')} style={{ width: '100%', height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', border: 'none', cursor: 'pointer', borderRadius: '8px', background: activeTab === 'history' ? 'rgba(255,255,255,0.05)' : 'transparent', color: activeTab === 'history' ? 'white' : '#888', transition: 'all 0.2s', marginTop: '8px' }}>
                         <History size={16} /> Order history
                     </button>
-                    <button onClick={() => setActiveTab('settings')} style={{ width: '100%', height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', border: 'none', cursor: 'pointer', borderRadius: '8px', background: activeTab === 'settings' ? 'rgba(255,255,255,0.05)' : 'transparent', color: activeTab === 'settings' ? 'white' : '#888', transition: 'all 0.2s', marginTop: '8px' }}>
+                    <button onClick={() => switchTab('settings')} style={{ width: '100%', height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', border: 'none', cursor: 'pointer', borderRadius: '8px', background: activeTab === 'settings' ? 'rgba(255,255,255,0.05)' : 'transparent', color: activeTab === 'settings' ? 'white' : '#888', transition: 'all 0.2s', marginTop: '8px' }}>
                         <Settings size={16} /> Menu settings
+                    </button>
+
+                    <button onClick={handleLogout} style={{ width: '100%', height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', border: 'none', cursor: 'pointer', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', transition: 'all 0.2s', marginTop: '32px' }}>
+                        <LogOut size={16} /> Sign out
                     </button>
                 </nav>
 
@@ -203,8 +257,28 @@ const AdminDashboard = () => {
                             </div>
                         )}
                         {activeTab === 'history' && (
-                            <div style={{ padding: '2px 10px', borderRadius: '99px', background: 'rgba(201,169,110,0.1)', border: '1px solid rgba(201,169,110,0.2)', color: '#C9A96E', fontSize: '11px', fontWeight: '600' }}>
-                                TODAY'S REVENUE: ₹{history.reduce((sum, h) => sum + h.total_amount, 0).toLocaleString()}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                <div style={{ position: 'relative' }}>
+                                    <input 
+                                        type="date" 
+                                        value={selectedDate} 
+                                        onChange={(e) => setSelectedDate(e.target.value)}
+                                        style={{ 
+                                            background: 'rgba(255,255,255,0.05)', 
+                                            border: '1px solid rgba(255,255,255,0.1)', 
+                                            color: '#C9A96E', 
+                                            padding: '4px 12px', 
+                                            borderRadius: '6px', 
+                                            fontSize: '11px',
+                                            outline: 'none',
+                                            cursor: 'pointer'
+                                        }} 
+                                    />
+                                    <CalendarDays size={12} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#555' }} />
+                                </div>
+                                <div style={{ padding: '2px 10px', borderRadius: '99px', background: 'rgba(201,169,110,0.1)', border: '1px solid rgba(201,169,110,0.2)', color: '#C9A96E', fontSize: '11px', fontWeight: '600' }}>
+                                    REVENUE: ₹{historySummary.totalRevenue.toLocaleString()}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -284,7 +358,30 @@ const AdminDashboard = () => {
                             </AnimatePresence>
                         </div>
                     ) : activeTab === 'history' ? (
-                        <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '12px', overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                            {/* SUMMARY CARDS */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                                <div className="glass" style={{ padding: '24px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                    <div style={{ padding: '12px', background: 'rgba(34,197,94,0.1)', borderRadius: '12px' }}>
+                                        <TrendingUp size={24} color="#22c55e" />
+                                    </div>
+                                    <div>
+                                        <p style={{ fontSize: '11px', color: '#555', textTransform: 'uppercase', marginBottom: '4px' }}>Total Revenue</p>
+                                        <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>₹{historySummary.totalRevenue.toLocaleString()}</h3>
+                                    </div>
+                                </div>
+                                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="glass" style={{ padding: '24px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                    <div style={{ padding: '12px', background: 'rgba(201,169,110,0.1)', borderRadius: '12px' }}>
+                                        <BarChart3 size={24} color="#C9A96E" />
+                                    </div>
+                                    <div>
+                                        <p style={{ fontSize: '11px', color: '#555', textTransform: 'uppercase', marginBottom: '4px' }}>Orders Processed</p>
+                                        <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>{historySummary.totalOrders}</h3>
+                                    </div>
+                                </motion.div>
+                            </div>
+
+                            <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '12px', overflow: 'hidden' }}>
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead style={{ background: 'rgba(255,255,255,0.01)' }}>
                                     <tr style={{ textAlign: 'left', fontSize: '11px', color: '#444' }}>
@@ -313,7 +410,8 @@ const AdminDashboard = () => {
                                 </tbody>
                             </table>
                         </div>
-                    ) : (
+                    </div>
+                ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {filteredMenu.map(item => (
                                 <div key={item.id} onClick={() => toggleAvailability(item)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px', padding: '0 24px', background: flashingItems.includes(item.id) ? 'rgba(201,169,110,0.06)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.02)', cursor: 'pointer', opacity: loadingItems.includes(item.id) ? 0.7 : 1 }}>

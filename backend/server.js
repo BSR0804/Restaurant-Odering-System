@@ -175,8 +175,8 @@ app.get('/api/history/orders', (req, res) => {
       items: JSON.parse(order.items)
     }));
 
-    // Calculate Summary
-    const totalRevenue = formattedOrders.reduce((sum, o) => sum + o.total_amount, 0);
+    // Calculate Summary with explicit numeric parsing
+    const totalRevenue = formattedOrders.reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
     const totalOrders = formattedOrders.length;
 
     res.json({

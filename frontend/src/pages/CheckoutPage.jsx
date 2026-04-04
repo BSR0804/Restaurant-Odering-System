@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, CreditCard, ShoppingBag, Truck } from 'lucide-react';
+import { ChevronLeft, CreditCard, ShoppingBag, Truck, Minus, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const CheckoutPage = ({ cart, clearCart, tableNumber }) => {
+const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber }) => {
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
@@ -119,7 +119,7 @@ const CheckoutPage = ({ cart, clearCart, tableNumber }) => {
   }
 
   return (
-    <div className="screen container">
+    <div className="screen container animate-global-fade">
       {/* STICKY BRANDING LOGO */}
       <div className="logo-container" style={{ 
           position: 'fixed', 
@@ -154,8 +154,7 @@ const CheckoutPage = ({ cart, clearCart, tableNumber }) => {
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {cart.map(item => (
           <div key={item.id} className="menu-item" style={{ marginBottom: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-               <div style={{ fontWeight: '500', fontSize: '15px' }}>{item.name} <span style={{ color: 'var(--text-muted)', fontSize: '13px', marginLeft: '8px' }}>x {item.qty}</span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                {item.type === 'veg' ? (
                    <div style={{ border: '1.5px solid #4CAF50', padding: '1px', borderRadius: '2px', width: '12px', height: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                        <div style={{ width: '6px', height: '6px', background: '#4CAF50', borderRadius: '50%' }}></div>
@@ -165,8 +164,31 @@ const CheckoutPage = ({ cart, clearCart, tableNumber }) => {
                        <div style={{ width: '6px', height: '6px', background: '#F44336', borderRadius: '50%' }}></div>
                    </div>
                )}
+               
+               <div style={{ flex: 1 }}>
+                 <div style={{ fontWeight: '500', fontSize: '15px', color: 'white' }}>{item.name}</div>
+                 <div style={{ color: 'var(--text-dim)', fontSize: '12px' }}>₹{item.price}</div>
+               </div>
+
+               {/* QUANTITY CONTROLS */}
+               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(255,255,255,0.03)', padding: '6px 12px', borderRadius: '99px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <button 
+                      onClick={(e) => { e.stopPropagation(); removeFromCart(item); }}
+                      style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', opacity: 0.8, display: 'flex', alignItems: 'center' }}
+                  >
+                      <Minus size={14} />
+                  </button>
+                  <span style={{ fontSize: '13px', fontWeight: 'bold', minWidth: '16px', textAlign: 'center' }}>{item.qty}</span>
+                  <button 
+                      onClick={(e) => { e.stopPropagation(); addToCart(item); }}
+                      style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', opacity: 0.8, display: 'flex', alignItems: 'center' }}
+                  >
+                      <Plus size={14} />
+                  </button>
+               </div>
             </div>
-            <div style={{ fontWeight: '400', fontSize: '14px' }}>₹{item.price * item.qty}</div>
+            
+            <div style={{ fontWeight: '400', fontSize: '14px', marginLeft: '24px' }}>₹{item.price * item.qty}</div>
           </div>
         ))}
 
