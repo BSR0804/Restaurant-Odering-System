@@ -82,8 +82,13 @@ const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber 
     }
   };
 
+  const getLocalDateStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
   const [isScheduled, setIsScheduled] = useState(false);
-  const [scheduledDate, setScheduledDate] = useState(new Date().toISOString().split('T')[0]);
+  const [scheduledDate, setScheduledDate] = useState(getLocalDateStr());
   const [scheduledTime, setScheduledTime] = useState(() => {
     const d = new Date();
     d.setMinutes(d.getMinutes() + 30);
@@ -92,7 +97,7 @@ const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber 
 
   const completeOrder = async (payId) => {
       try {
-          const scheduled_at = isScheduled ? `${scheduledDate}T${scheduledTime}:00` : null;
+          const scheduled_at = isScheduled ? new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString() : null;
 
           const res = await axios.post('http://localhost:5000/api/orders/confirm', {
              table_number: tableNumber || 0,
@@ -228,7 +233,7 @@ const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber 
                        <label style={{ fontSize: '9px', color: '#555', textTransform: 'uppercase', marginBottom: '6px', display: 'block' }}>Date</label>
                        <input 
                            type="date" 
-                           min={new Date().toISOString().split('T')[0]}
+                           min={getLocalDateStr()}
                            value={scheduledDate}
                            onChange={(e) => setScheduledDate(e.target.value)}
                            style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white', fontSize: '13px', outline: 'none' }}

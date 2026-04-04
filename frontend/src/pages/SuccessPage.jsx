@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
+import axios from 'axios';
 import { Volume2, VolumeX } from 'lucide-react';
 
 const socket = io('http://localhost:5000');
@@ -15,6 +16,17 @@ const SuccessPage = () => {
 
     useEffect(() => {
         if (!orderId) return;
+
+        // THE FIX: Sync status across refresh by fetching latest from BD
+        const syncStatus = async () => {
+            try {
+                const res = await axios.get(`http://localhost:5000/api/orders/${orderId}`);
+                if (res.data) setStatus(res.data.status);
+            } catch (e) {
+                console.error("Status Sync Error:", e);
+            }
+        };
+        syncStatus();
 
         socket.on('order-status-update', (data) => {
             if (data.id === orderId) {
@@ -34,8 +46,9 @@ const SuccessPage = () => {
 
     const getStatusText = () => {
         if (status === 'ready') return "Ready for take away";
-        if (status === 'completed') return "Delivered";
-        return "Your food is being prepared";
+        if (status === 'complete') return "Order Delivered";
+        if (status === 'accepted') return "Your food is being prepared";
+        return "Order Requested";
     };
 
     if (!token) {
@@ -105,6 +118,21 @@ const SuccessPage = () => {
                         <h2 style={{ fontSize: '56px', fontWeight: '700', color: 'white', letterSpacing: '0.05em', margin: '0' }}>
                             {token}
                         </h2>
+                        {location.state?.scheduled_at && (() => {
+                            try {
+                                const d = new Date(location.state.scheduled_at);
+                                if (!isNaN(d.getTime())) {
+                                    return (
+                                        <div style={{ marginTop: '12px', padding: '6px 16px', background: 'rgba(201,169,110,0.1)', border: '1px solid rgba(201,169,110,0.2)', borderRadius: '99px', display: 'inline-block' }}>
+                                            <span style={{ fontSize: '12px', color: '#C9A96E', fontWeight: 'bold' }}>
+                                                SCHEDULED: {d.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true })}
+                                            </span>
+                                        </div>
+                                    );
+                                }
+                            } catch (e) {}
+                            return null;
+                        })()}
                     </div>
 
                     <div style={{ position: 'relative', margin: '32px -32px' }}>
@@ -126,12 +154,12 @@ const SuccessPage = () => {
                         Summary
                     </div>
                     <div>
-                        {items?.map((item, index) => (
+                        {items?.filter(i => !i.name.startsWith('⏰'))?.map((item, index, filteredArray) => (
                             <div key={item.id} style={{ 
                                 display: 'flex', 
                                 justifyContent: 'space-between', 
                                 padding: '12px 0',
-                                borderBottom: index === items.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.05)'
+                                borderBottom: index === filteredArray.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.05)'
                             }}>
                                 <span style={{ fontSize: '13px', color: 'white' }}>
                                     {item.name} <span style={{ color: '#888', marginLeft: '4px' }}>x{item.qty}</span>

@@ -33,7 +33,37 @@ const AdminDashboard = () => {
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
     const [soundEnabled, setSoundEnabled] = useState(true);
     const [toasts, setToasts] = useState([]);
-    const audioRef = React.useRef(new Audio('/bell.wav'));
+    const audioRef = React.useRef(null);
+    const [isPulsing, setIsPulsing] = useState(false);
+
+    // THE FIX: Use a Ref to ensure the socket listener always has access to the latest ringBell function
+    const ringBellRef = React.useRef(null);
+
+    const ringBell = (force = false) => {
+        // Only skip if muted AND not forced (Test button forces it)
+        if (!soundRef.current && !force) return;
+        
+        setIsPulsing(true);
+        setTimeout(() => setIsPulsing(false), 2000);
+        
+        try {
+            // THE FIX: Use the most working path found so far
+            const bell = new Audio('/admin-bell.wav');
+            bell.play().catch(e => console.warn("🔔 Bell blocked:", e));
+            
+            // Fallback: Also try DOM engine if exists
+            const domBell = document.getElementById('admin-bell-engine');
+            if (domBell) {
+                domBell.currentTime = 0;
+                domBell.play().catch(() => {});
+            }
+        } catch (err) {
+            console.error("Critical Sound Error:", err);
+        }
+    };
+
+    // Update the ref every render so the socket listener always gets the current function
+    useEffect(() => { ringBellRef.current = ringBell; });
 
     // Category / Filter States
     const [categoryFilter, setCategoryFilter] = useState('All');
@@ -68,6 +98,14 @@ const AdminDashboard = () => {
     const switchTab = (tab) => {
         setActiveTab(tab);
         localStorage.setItem('admin_active_tab', tab);
+        // THE FIX: Prime audio context on tab change to prevent browser blocking
+        if (audioRef.current && soundEnabled) {
+            audioRef.current.muted = true;
+            audioRef.current.play().then(() => {
+                audioRef.current.pause();
+                audioRef.current.muted = false;
+            }).catch(() => {});
+        }
     };
 
     useEffect(() => {
@@ -109,9 +147,10 @@ const AdminDashboard = () => {
     useEffect(() => { soundRef.current = soundEnabled; }, [soundEnabled]);
     useEffect(() => { dateRef.current = selectedDate; }, [selectedDate]);
 
+    // THE FIX: Move ALL socket listeners to a persistent global effect to prevent 
+    // interruption when changing dates or tabs in the historical view.
     useEffect(() => {
         if (!isAuthenticated) return;
-        fetchData();
 
         const handleConnect = () => {
             setIsConnected(true);
@@ -123,20 +162,13 @@ const AdminDashboard = () => {
                 const exists = prev.find(o => String(o.id) === String(data.id));
                 return exists ? prev : [data, ...prev];
             });
-            
             const toastId = Date.now();
             setToasts(prev => [...prev, { id: toastId, token: data.token_number }]);
             setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== toastId)); }, 4000);
-            
-            if (audioRef.current && soundRef.current) {
-                audioRef.current.currentTime = 0;
-                audioRef.current.play().catch(e => console.error("Audio prime:", e));
-            }
+            if (ringBellRef.current) ringBellRef.current();
         };
         const handleOrderComplete = (completedOrder) => {
             setOrders(prev => prev.filter(o => String(o.id) !== String(completedOrder.id)));
-            
-            // THE FIX: Only add to history if order's creation date matches the currently viewed date (Locally)
             if (completedOrder.created_at) {
                 const d = new Date(completedOrder.created_at);
                 const orderDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -172,6 +204,11 @@ const AdminDashboard = () => {
             socket.off('order_complete', handleOrderComplete);
             socket.off('menu_update', handleMenuUpdate);
         };
+    }, [isAuthenticated]);
+
+    // Data-specific refresh on date change
+    useEffect(() => {
+        if (isAuthenticated) fetchData();
     }, [isAuthenticated, selectedDate]);
 
     // THE FIX: Move to history ONLY AFTER Confirmed Cloud Write (Fix 6)
@@ -232,6 +269,22 @@ const AdminDashboard = () => {
     const totalRevenue = history.reduce((sum, h) => sum + (parseFloat(h.total_amount) || 0), 0);
     const totalOrdersProcessed = history.length;
 
+    const isScheduled = (order) => {
+        if (order.scheduled_at) return true;
+        if (order.items?.[0]?.name?.startsWith('⏰')) return true;
+        return false;
+    };
+
+    const getScheduledTimeDisplay = (order) => {
+        if (order.scheduled_at) {
+            return new Date(order.scheduled_at).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true });
+        }
+        if (order.items?.[0]?.name?.startsWith('⏰')) {
+            return order.items[0].name.replace('⏰ SCHEDULED: ', '');
+        }
+        return null;
+    };
+
     const categories = [...new Set(fullMenu.map(i => i.category))];
     useEffect(() => {
         if (categories.length > 0 && categoryFilter === 'All') {
@@ -272,9 +325,9 @@ const AdminDashboard = () => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <LayoutGrid size={16} /> Live orders
                         </div>
-                        {orders.length > 0 && (
+                        {orders.filter(o => !isScheduled(o)).length > 0 && (
                             <motion.span 
-                                key={orders.length}
+                                key={orders.filter(o => !isScheduled(o)).length}
                                 initial={{ scale: 0.8, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 style={{ 
@@ -286,10 +339,35 @@ const AdminDashboard = () => {
                                     borderRadius: '6px' 
                                 }}
                             >
-                                {orders.length}
+                                {orders.filter(o => !isScheduled(o)).length}
                             </motion.span>
                         )}
                     </button>
+
+                    <button onClick={() => switchTab('scheduled')} style={{ width: '100%', height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', border: 'none', cursor: 'pointer', borderRadius: '8px', background: activeTab === 'scheduled' ? 'rgba(255,255,255,0.05)' : 'transparent', color: activeTab === 'scheduled' ? 'white' : '#888', transition: 'all 0.2s', marginTop: '8px' }}>
+                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Clock size={16} /> Scheduled
+                        </div>
+                        {orders.filter(o => isScheduled(o)).length > 0 && (
+                            <motion.span 
+                                key={orders.filter(o => isScheduled(o)).length}
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                style={{ 
+                                    background: 'rgba(201,169,110,0.2)', 
+                                    color: '#C9A96E', 
+                                    fontSize: '10px', 
+                                    fontWeight: 'bold', 
+                                    padding: '2px 6px', 
+                                    borderRadius: '6px',
+                                    border: '1px solid rgba(201,169,110,0.3)'
+                                }}
+                            >
+                                {orders.filter(o => isScheduled(o)).length}
+                            </motion.span>
+                        )}
+                    </button>
+
                     <button onClick={() => switchTab('history')} style={{ width: '100%', height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', border: 'none', cursor: 'pointer', borderRadius: '8px', background: activeTab === 'history' ? 'rgba(255,255,255,0.05)' : 'transparent', color: activeTab === 'history' ? 'white' : '#888', transition: 'all 0.2s', marginTop: '8px' }}>
                         <History size={16} /> Order history
                     </button>
@@ -297,14 +375,16 @@ const AdminDashboard = () => {
                         <Settings size={16} /> Menu settings
                     </button>
 
-                    <button onClick={handleLogout} style={{ width: '100%', height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', border: 'none', cursor: 'pointer', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', transition: 'all 0.2s', marginTop: '32px' }}>
+                    <button onClick={handleLogout} style={{ width: '100%', height: '40px', padding: '0 16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', border: 'none', cursor: 'pointer', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', transition: 'all 0.2s', marginTop: '16px' }}>
                         <LogOut size={16} /> Sign out
                     </button>
                 </nav>
 
                 <div style={{ marginTop: 'auto', padding: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div className={`status-dot ${isConnected ? 'status-dot-green' : 'status-dot-red'}`} />
-                    <span style={{ fontSize: '12px', color: '#555' }}>{isConnected ? 'Connected' : 'Syncing...'}</span>
+                    <div className={`status-dot ${isConnected ? 'status-dot-green' : 'status-dot-red'} ${isPulsing ? 'pulse-gold' : ''}`} />
+                    <span style={{ fontSize: '12px', color: isPulsing ? '#C9A96E' : '#555', fontWeight: isPulsing ? 'bold' : 'normal' }}>
+                        {isPulsing ? '🔔 ORDER RECEIVED' : (isConnected ? 'Connected' : 'Syncing...')}
+                    </span>
                 </div>
             </aside>
 
@@ -312,7 +392,7 @@ const AdminDashboard = () => {
                 <header style={{ height: '56px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', background: '#080809' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <span style={{ fontSize: '16px', fontWeight: '500', color: 'white' }}>
-                            {activeTab === 'live' ? 'Live orders' : activeTab === 'history' ? 'Order history' : 'Menu settings'}
+                            {activeTab === 'live' ? 'Live orders' : activeTab === 'scheduled' ? 'Scheduled orders' : activeTab === 'history' ? 'Order history' : 'Menu settings'}
                         </span>
                         {activeTab === 'settings' && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '2px 8px', background: 'rgba(34,197,94,0.1)', color: '#22c55e', borderRadius: '4px', fontSize: '10px', fontWeight: '600' }}>
@@ -352,16 +432,18 @@ const AdminDashboard = () => {
                     
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                         <div style={{ fontSize: '13px', color: '#555' }}>{currentTime}</div>
+                        {!soundEnabled && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ef4444', fontSize: '10px', fontWeight: 'bold', animation: 'pulse 2s infinite' }}>
+                                <XCircle size={10} /> ALERTS MUTED
+                            </div>
+                        )}
                         <button 
                             onClick={() => {
                                 const newVal = !soundEnabled;
                                 setSoundEnabled(newVal);
-                                if (newVal && audioRef.current) {
-                                    audioRef.current.currentTime = 0;
-                                    audioRef.current.play().catch(e => console.log("Prime:", e));
-                                }
+                                if (newVal) ringBell(true);
                             }} 
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: soundEnabled ? 'white' : '#555' }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: soundEnabled ? 'white' : '#ef4444' }}
                         >
                             {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
                         </button>
@@ -389,16 +471,16 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    {activeTab === 'live' ? (
+                    {activeTab === 'live' || activeTab === 'scheduled' ? (
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
                             <AnimatePresence>
-                                {orders.map(order => (
+                                {orders.filter(o => activeTab === 'scheduled' ? isScheduled(o) : !isScheduled(o)).map(order => (
                                     <motion.div key={order.id} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '20px' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'flex-start' }}>
                                             <div>
                                                 <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'white' }}>{order.token_number}</div>
                                                 {/* SCHEDULED ALERT */}
-                                                {order.scheduled_at && (
+                                                {isScheduled(order) && (
                                                     <div style={{ 
                                                         display: 'flex', 
                                                         alignItems: 'center', 
@@ -411,8 +493,8 @@ const AdminDashboard = () => {
                                                         width: 'fit-content'
                                                     }}>
                                                         <div style={{ width: '4px', height: '4px', background: '#C9A96E', borderRadius: '50%' }} />
-                                                        <span style={{ fontSize: '10px', color: '#C9A96E', fontWeight: 'bold', textTransform: 'uppercase' }}>
-                                                            Scheduled: {new Date(order.scheduled_at).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true })}
+                                                        <span style={{ fontSize: '11px', color: '#C9A96E', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                                                            {getScheduledTimeDisplay(order)}
                                                         </span>
                                                     </div>
                                                 )}
@@ -420,27 +502,35 @@ const AdminDashboard = () => {
                                             <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#555' }}>Table {order.table_number}</span>
                                         </div>
                                         <div style={{ marginBottom: '20px' }}>
-                                            {order.items.map((item, idx) => (
+                                            {order.items.filter(i => !i.name.startsWith('⏰')).map((item, idx) => (
                                                 <div key={idx} style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>{item.name} × {item.qty}</div>
                                             ))}
                                         </div>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button 
-                                                disabled={order.status === 'ready'}
-                                                onClick={() => updateOrderStatus(order.id, 'ready')} 
-                                                style={{ 
-                                                    flex: 1, background: order.status === 'ready' ? 'rgba(201,169,110,0.02)' : 'rgba(201,169,110,0.1)', 
-                                                    color: order.status === 'ready' ? '#444' : '#C9A96E', 
-                                                    border: order.status === 'ready' ? '1px solid rgba(255,255,255,0.03)' : '1px solid rgba(201,169,110,0.2)', 
-                                                    padding: '8px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold',
-                                                    cursor: order.status === 'ready' ? 'not-allowed' : 'pointer',
-                                                    transition: 'all 0.2s'
-                                                }}
-                                            >
-                                                {order.status === 'ready' ? 'READY' : 'MARK READY'}
-                                            </button>
-                                            <button onClick={() => updateOrderStatus(order.id, 'complete')} style={{ flex: 1, background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: 'none', padding: '8px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold' }}>COMPLETE</button>
-                                        </div>
+                                        {order.status !== 'complete' && (
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button 
+                                                    disabled={order.status === 'ready'}
+                                                    onClick={() => {
+                                                        if (activeTab === 'scheduled' && order.status === 'pending') {
+                                                            updateOrderStatus(order.id, 'accepted');
+                                                        } else {
+                                                            updateOrderStatus(order.id, 'ready');
+                                                        }
+                                                    }} 
+                                                    style={{ 
+                                                        flex: 1, background: order.status === 'ready' ? 'rgba(201,169,110,0.02)' : 'rgba(201,169,110,0.1)', 
+                                                        color: order.status === 'ready' ? '#444' : '#C9A96E', 
+                                                        border: order.status === 'ready' ? '1px solid rgba(255,255,255,0.03)' : '1px solid rgba(201,169,110,0.2)', 
+                                                        padding: '8px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold',
+                                                        cursor: order.status === 'ready' ? 'not-allowed' : 'pointer',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                >
+                                                    {order.status === 'ready' ? 'READY' : (activeTab === 'scheduled' && order.status === 'pending' ? 'ACCEPT' : 'MARK READY')}
+                                                </button>
+                                                <button onClick={() => updateOrderStatus(order.id, 'complete')} style={{ flex: 1, background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: 'none', padding: '8px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold' }}>COMPLETE</button>
+                                            </div>
+                                        )}
                                     </motion.div>
                                 ))}
                             </AnimatePresence>
@@ -484,10 +574,10 @@ const AdminDashboard = () => {
                                         <tr key={row.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                             <td style={{ padding: '16px 24px', color: 'white' }}>{row.token_number}</td>
                                             <td style={{ padding: '16px 24px' }}>
-                                                {Array.isArray(row.items) ? row.items.map((i, idx) => (
+                                                {Array.isArray(row.items) ? row.items.filter(i => !i.name.startsWith('⏰')).map((i, idx, filtered) => (
                                                     <span key={idx}>
                                                         {i.name} x{i.qty}
-                                                        {idx < row.items.length - 1 ? ', ' : ''}
+                                                        {idx < filtered.length - 1 ? ', ' : ''}
                                                     </span>
                                                 )) : 'No Items'}
                                             </td>
@@ -538,6 +628,9 @@ const AdminDashboard = () => {
                     </div>
                 ))}
             </div>
+
+            {/* THE BELL ENGINE: Resides in DOM for maximum browser reliability */}
+            <audio id="admin-bell-engine" src="/admin-bell.wav" preload="auto" />
         </div>
     );
 };

@@ -6,28 +6,30 @@ A professional, real-time dining and operations ecosystem designed for modern re
 
 ## ⚡ Core Features
 
-### 1. Cloud-Native Persistence (Supabase) ☁️
+### 1. High-Precision Scheduled Ordering ⏰
+- **Granular 15-Min Intervals**: Customers can now pre-order meals with 15-minute precision up to 24 hours in advance.
+- **Unified Scheduling UI**: Smart date/time selection ensures zero invalid reservations.
+- **Admin Visibility**: Scheduled orders are clearly distinguished in the Staff Dashboard for proactive kitchen planning.
+
+### 2. Universal Admin Notification Hub 🔔
+- **"Infinite Listen" Engine**: Decoupled socket listeners ensure the notification bell rings flawlessly even while viewing past history or revenue archives.
+- **Triple-Redundancy Alerts**: The notification engine attempts 3 separate fire-paths (DOM, Ref, and Constructor) to bypass aggressive browser sound-blocking rules.
+- **Visual Alert Pulse**: A gold visual pulse in the sidebar provides secondary confirmation for new orders, even if the system volume is muted.
+
+### 3. Cloud-Native Persistence (Supabase) ☁️
 - **PostgreSQL Ledger**: Substituted local SQLite for a mission-critical **Supabase PostgreSQL** instance.
 - **Identity-Mapped History**: Orders are securely tied to **Google Identity** emails, allowing persistent history across devices.
 - **Atomic Sync**: Deduplicated dashboard logic ensures zero "ghost" orders or revenue inflation.
 
-### 2. Neural Audio Orchestration 🔔
-- **Unique Auditory Signatures**: 
-  - **Admin**: "Bell" alert for every new incoming order.
-  - **Customer**: "Happy Bells" high-fidelity notification specifically when their order is marked as **Ready**.
-- **Browser-Interaction Priming**: Smart logic that "unlocks" auditory permissions, ensuring alerts fire even on dimmed screens.
-
-### 3. Elite UX Language 🎨
-- **Zero-Latency (Optimistic UI)**: Dashboard toggles and status updates reflect **instantly** in the UI, syncing with the cloud in the background for a sub-second response feel.
+### 4. Elite UX & Crash Hardening 🎨
+- **Defensive Rendering**: Hardened the Success and Account pages to ensure malformed orders or legacy data records never crash the UI into a "blank screen."
+- **Zero-Latency (Optimistic UI)**: Dashboard toggles and status updates reflect **instantly** in the UI, syncing with the cloud in the background.
 - **Glassmorphic Skeleton UI**: Replaced jarring loading screens with high-end, layout-aware skeletons for a premium browsing experience.
-- **Category Lock**: Browse across 30+ items without losing your scroll or category position when adding to the cart.
-- **Revenue Telemetry**: Real-time business metrics (Revenue and Orders Processed) calculated from confirmed cloud-writes.
 
-### 4. IST & Indian Locale Optimization 🇮🇳
+### 5. IST & Indian Locale Optimization 🇮🇳
 - **IST Synchronization**: The entire ecosystem (Dashboard, User Account, and History) is hard-locked to **Indian Standard Time (Asia/Kolkata)**.
-- **Timezone-Aware History**: Advanced UTC-to-Local conversion ensures that orders placed after midnight correctly appear on the current local day, even across year-end or month-end boundaries.
+- **Timezone-Aware History**: Advanced UTC-to-Local conversion ensures that orders placed after midnight correctly appear on the current local day.
 - **Currency Integration**: Full support for Indian Rupee (₹) symbols and lakh-compliant digit grouping.
-- **IST Historical Ledger**: Orders in the history table now show the exact completion time in the `HH:MM AM/PM IST` format.
 
 ---
 

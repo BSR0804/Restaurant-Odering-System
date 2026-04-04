@@ -58,22 +58,57 @@ app.post('/api/orders/confirm', async (req, res) => {
   const { table_number, items, total_amount, payment_id, user_email, scheduled_at } = req.body;
   const token_number = 'TK-' + Math.floor(1000 + Math.random() * 9000);
   
-  const { data, error } = await supabase.from('orders').insert({
+  // ATTEMPT 1: Full Order (with Scheduling)
+  let result = await supabase.from('orders').insert({
     table_number: parseInt(table_number),
     items,
     total_amount,
     token_number,
     status: 'pending',
-    user_email, // Link order to user
-    scheduled_at // THE FIX: Optional scheduling
+    user_email,
+    scheduled_at
   }).select();
 
-  if (error) return res.status(500).json({ error: error.message });
+  // UNIVERSAL FALLBACK: If ANY error occurs (likely missing column or format issue), 
+  // we embed the scheduling info into the items list so it's NEVER LOST.
+  if (result.error) {
+    console.warn("⚠️ Database mismatch. Embedding scheduling into items:", result.error.message);
+    const enrichedItems = scheduled_at ? [{ name: `⏰ SCHEDULED: ${new Date(scheduled_at).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true })}`, qty: 1, price: 0 }, ...items] : items;
+    
+    result = await supabase.from('orders').insert({
+      table_number: parseInt(table_number),
+      items: enrichedItems,
+      total_amount,
+      token_number,
+      status: 'pending',
+      user_email
+    }).select();
+  }
+
+  const { data, error } = result;
+
+  if (error) {
+    console.error("❌ Fatal Order Error (After Fallback):", error.message);
+    return res.status(500).json({ error: "High-level database error. Order could not be saved." });
+  }
   
-  console.log(`💰 Payment Confirmed: ${payment_id || 'MOCK'} | Token: ${token_number} | For: ${user_email} | Scheduled: ${scheduled_at || 'ASAP'}`);
+  console.log(`💰 Payment Confirmed: ${payment_id || 'MOCK'} | Token: ${token_number} | For: ${user_email}`);
   io.to('restaurant-owners').emit('new-order', data[0]);
   
   res.json({ success: true, token: token_number, order_id: data[0].id, scheduled_at: data[0].scheduled_at });
+});
+
+// THE FIX: Fetch single order for Success Page refresh sync
+app.get('/api/orders/:id', async (req, res) => {
+    const { id } = req.params;
+    const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', parseInt(id))
+        .single();
+
+    if (error) return res.status(404).json({ error: 'Order not found' });
+    res.json(data);
 });
 
 // THE FIX: Fetch personal orders for the User Account Page
@@ -150,13 +185,14 @@ app.patch('/api/admin/orders/:id', async (req, res) => {
 
         console.log(`✅ Cloud Sync Success: Order #${id} is now ${status}.`);
         
-        // Notify the dashboard
+        // Notify everyone (including customer success page)
+        io.emit('order-status-update', { id: parseInt(id), status });
+        
+        // Specific cleanup for dashboard
         if (status === 'complete') {
             io.to('restaurant-owners').emit('order_complete', data[0]);
-        } else {
-            io.emit('order-status-update', { id: parseInt(id), status });
         }
-
+        
         res.json(data[0]);
     } catch (err) {
         res.status(500).json({ error: err.message });

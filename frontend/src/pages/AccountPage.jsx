@@ -37,7 +37,27 @@ const AccountPage = () => {
         navigate('/');
     };
 
-
+    const getScheduledTimeDisplay = (order) => {
+        try {
+            if (order.scheduled_at) {
+                const d = new Date(order.scheduled_at);
+                if (!isNaN(d.getTime())) {
+                    return d.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true });
+                }
+            }
+        } catch (e) {
+            console.error("Date formatting error:", e);
+        }
+        
+        // Metadata fallback if column is missing or date is invalid
+        if (Array.isArray(order.items)) {
+            const schedItem = order.items.find(i => i.name?.startsWith('⏰'));
+            if (schedItem) {
+                return schedItem.name.replace('⏰ SCHEDULED: ', '');
+            }
+        }
+        return null;
+    };
 
     return (
         <div className="screen container animate-global-fade">
@@ -93,46 +113,73 @@ const AccountPage = () => {
                         <p>No orders yet. Your history will appear here.</p>
                     </div>
                 ) : (
-                    orders.map(order => (
-                        <div key={order.id} className="menu-item" style={{ flexDirection: 'column', alignItems: 'flex-start', padding: '24px', gap: '16px', border: '1px solid var(--card-border)', background: 'rgba(255,255,255,0.01)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <span style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--accent)' }}>{order.token_number}</span>
-                                    <div style={{ height: '4px', width: '4px', background: '#333', borderRadius: '50%' }} />
-                                    <span style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase' }}>Table {order.table_number}</span>
+                    orders.map(order => {
+                        if (!order) return null;
+                        const safeStatus = order.status || 'pending';
+                        return (
+                            <div key={order.id} className="menu-item" style={{ flexDirection: 'column', alignItems: 'flex-start', padding: '24px', gap: '16px', border: '1px solid var(--card-border)', background: 'rgba(255,255,255,0.01)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <span style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--accent)' }}>{order.token_number}</span>
+                                            <div style={{ height: '4px', width: '4px', background: '#333', borderRadius: '50%' }} />
+                                            <span style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase' }}>Table {order.table_number || '0'}</span>
+                                        </div>
+                                        {getScheduledTimeDisplay(order) && (
+                                            <div style={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                gap: '5px', 
+                                                padding: '3px 10px',
+                                                background: 'rgba(201,169,110,0.1)',
+                                                border: '1px solid rgba(201,169,110,0.2)',
+                                                borderRadius: '6px',
+                                                width: 'fit-content'
+                                            }}>
+                                                <div style={{ width: '3px', height: '3px', background: '#C9A96E', borderRadius: '50%' }} />
+                                                <span style={{ fontSize: '9px', color: '#C9A96E', fontWeight: 'bold' }}>{getScheduledTimeDisplay(order)}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div style={{ 
+                                        padding: '4px 12px', 
+                                        borderRadius: '6px', 
+                                        fontSize: '10px', 
+                                        fontWeight: 'bold',
+                                        background: safeStatus === 'complete' ? 'rgba(34,197,94,0.1)' : 'rgba(201,169,110,0.1)',
+                                        color: safeStatus === 'complete' ? '#22c55e' : '#C9A96E',
+                                        textTransform: 'uppercase'
+                                    }}>
+                                        {safeStatus}
+                                    </div>
                                 </div>
-                                <div style={{ 
-                                    padding: '4px 12px', 
-                                    borderRadius: '6px', 
-                                    fontSize: '10px', 
-                                    fontWeight: 'bold',
-                                    background: order.status === 'complete' ? 'rgba(34,197,94,0.1)' : 'rgba(201,169,110,0.1)',
-                                    color: order.status === 'complete' ? '#22c55e' : '#C9A96E',
-                                    textTransform: 'uppercase'
-                                }}>
-                                    {order.status}
-                                </div>
-                            </div>
 
                             <div style={{ width: '100%' }}>
-                                {order.items.map((item, idx) => (
+                                {Array.isArray(order.items) ? order.items.filter(i => !i.name.startsWith('⏰')).map((item, idx) => (
                                     <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '6px', color: 'var(--text-dim)' }}>
                                         <span>{item.name} × {item.qty}</span>
                                         <span>₹{item.price * item.qty}</span>
                                     </div>
-                                ))}
+                                )) : <p style={{ fontSize: '11px', color: '#444' }}>No items found</p>}
                             </div>
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.03)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#444', fontSize: '11px' }}>
                                     <Clock size={12} />
-                                    {new Date(order.created_at).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' })} at {new Date(order.created_at).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true })}
+                                    {(() => {
+                                        try {
+                                            const d = new Date(order.created_at);
+                                            if (isNaN(d.getTime())) return "Unknown date";
+                                            return `${d.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' })} at ${d.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true })}`;
+                                        } catch (e) { return "Unknown date"; }
+                                    })()}
                                 </div>
                                 <span style={{ fontSize: '15px', fontWeight: '500' }}>₹{order.total_amount}</span>
                             </div>
                         </div>
-                    ))
-                )}
+                    );
+                })
+            )}
             </div>
         </div>
     );

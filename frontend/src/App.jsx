@@ -44,13 +44,13 @@ function App() {
   };
 
   const removeFromCart = (item) => {
-      setCart(prev => {
-          const existing = prev.find(i => i.id === item.id);
-          if (existing && existing.qty > 1) {
-              return prev.map(i => i.id === item.id ? { ...i, qty: i.qty - 1 } : i);
-          }
-          return prev.filter(i => i.id !== item.id);
-      });
+    setCart(prev => {
+      const existing = prev.find(i => i.id === item.id);
+      if (existing && existing.qty > 1) {
+        return prev.map(i => i.id === item.id ? { ...i, qty: i.qty - 1 } : i);
+      }
+      return prev.filter(i => i.id !== item.id);
+    });
   };
 
   const clearCart = () => setCart([]);
