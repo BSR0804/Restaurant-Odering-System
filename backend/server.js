@@ -234,7 +234,7 @@ app.get('/api/history/orders', async (req, res) => {
     res.json({ orders: data });
 });
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 server.listen(PORT, async () => {
     console.log(`☁️ Supabase Cloud Backend active on port ${PORT}`);
     await seedCloudMenu();
