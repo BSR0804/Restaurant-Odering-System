@@ -55,7 +55,7 @@ function UserMode() {
   const clearCart = () => setCart([]);
 
   return (
-    <GoogleOAuthProvider clientId="345892520340-fbk4bokr6r5hkg5f46qn80rjcqvj3nqj.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "345892520340-fbk4bokr6r5hkg5f46qn80rjcqvj3nqj.apps.googleusercontent.com"}>
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
