@@ -41,7 +41,6 @@ const AdminDashboard = () => {
     const [loadingItems, setLoadingItems] = useState([]);
     const [flashingItems, setFlashingItems] = useState([]);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-    const [historySummary, setHistorySummary] = useState({ totalRevenue: 0, totalOrders: 0 });
 
     const handleLogin = (e) => {
         e.preventDefault();
@@ -78,20 +77,19 @@ const AdminDashboard = () => {
         if (!isAuthenticated) return;
         try {
             const resOrders = await axios.get('http://localhost:5000/api/admin/orders');
-            setOrders(resOrders.data || []);
-        } catch (e) { console.error(e); }
+            setOrders(Array.isArray(resOrders.data) ? resOrders.data : []);
+        } catch (e) { console.error("LiveOrders Error:", e); }
 
         try {
             const resHistory = await axios.get(`http://localhost:5000/api/history/orders?date=${selectedDate}`);
-            setHistory(resHistory.data.orders || []);
-        } catch (e) { console.error(e); }
+            setHistory(Array.isArray(resHistory.data.orders) ? resHistory.data.orders : []);
+        } catch (e) { console.error("HistoryOrders Error:", e); }
 
         try {
             const resMenu = await axios.get('http://localhost:5000/api/menu');
             const rawData = resMenu.data || [];
-            const items = Array.isArray(rawData[0]?.items) ? rawData.flatMap(cat => cat.items) : rawData;
-            setFullMenu(items);
-        } catch (e) { console.error(e); }
+            setFullMenu(rawData);
+        } catch (e) { console.error("Menu Error:", e); }
     };
 
     useEffect(() => {
@@ -103,7 +101,10 @@ const AdminDashboard = () => {
             socket.emit('join-dashboard');
         });
         socket.on('disconnect', () => setIsConnected(false));
-        if (socket.connected) { socket.emit('join-dashboard'); setIsConnected(true); }
+        if (socket.connected) { 
+            socket.emit('join-dashboard'); 
+            setIsConnected(true); 
+        }
 
         socket.on('new-order', (data) => {
             setOrders(prev => [data, ...prev]);
@@ -113,8 +114,17 @@ const AdminDashboard = () => {
             
             if (audioRef.current && soundEnabled) {
                 audioRef.current.currentTime = 0;
-                audioRef.current.play().catch(e => console.error("Audio trigger failed:", e));
+                audioRef.current.play().catch(e => console.error("Audio prime:", e));
             }
+        });
+
+        socket.on('order_complete', (completedOrder) => {
+            // This handles updates from other clients
+            setOrders(prev => prev.filter(o => String(o.id) !== String(completedOrder.id)));
+            setHistory(prev => {
+                const exists = prev.find(h => String(h.id) === String(completedOrder.id));
+                return exists ? prev : [completedOrder, ...prev];
+            });
         });
 
         socket.on('menu_update', (data) => {
@@ -127,46 +137,51 @@ const AdminDashboard = () => {
             socket.off('connect');
             socket.off('disconnect');
             socket.off('new-order');
+            socket.off('order_complete');
             socket.off('menu_update');
         };
     }, [isAuthenticated, soundEnabled, selectedDate]);
 
-    // REACTIVE SUMMARY CALCULATION
-    useEffect(() => {
-        const rev = history.reduce((sum, h) => sum + (parseFloat(h.total_amount) || 0), 0);
-        setHistorySummary({ 
-            totalRevenue: rev, 
-            totalOrders: history.length 
-        });
-    }, [history]);
+    // THE FIX: Move to history ONLY AFTER Confirmed Cloud Write (Fix 6)
+    const updateOrderStatus = async (id, newStatus) => {
+        try {
+            const res = await axios.patch(`http://localhost:5000/api/admin/orders/${id}`, { status: newStatus });
+            
+            if (res.status === 200) {
+                const updatedOrder = res.data;
+                
+                if (newStatus === 'complete') {
+                    // Success! Remove from live, add to history
+                    setOrders(prev => prev.filter(o => String(o.id) !== String(id)));
+                    setHistory(prev => [updatedOrder, ...prev]);
+                    const toastId = Date.now();
+                    setToasts(prev => [...prev, { id: toastId, token: `Success: Order ${updatedOrder.token_number} is Complete` }]);
+                    setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== toastId)); }, 4000);
+                } else {
+                    setOrders(prev => prev.map(o => String(o.id) === String(id) ? { ...o, status: newStatus } : o));
+                }
+            }
+        } catch (err) { 
+            console.error("Order Status Update Error:", err);
+            alert("Error: Cloud could not confirm the completion signal.");
+        }
+    };
 
     const toggleAvailability = async (item) => {
         const newStatus = !item.is_available;
-        setFullMenu(prev => prev.map(i => i.id === item.id ? { ...i, is_available: newStatus } : i));
         setLoadingItems(prev => [...prev, item.id]);
-
         try {
             await axios.patch(`http://localhost:5000/api/menu/${item.id}/availability`, { is_available: newStatus });
         } catch (err) {
-            setFullMenu(prev => prev.map(i => i.id === item.id ? { ...i, is_available: item.is_available } : i));
-            setToasts(prev => [...prev, { id: Date.now(), token: `Failed to update ${item.name}`, error: true }]);
+            console.error("Menu Availability Error:", err);
+            setFullMenu(prev => [...prev]); // reset local UI
         } finally {
             setLoadingItems(prev => prev.filter(id => id !== item.id));
         }
     };
 
-    const updateOrderStatus = async (id, newStatus) => {
-        try {
-            await axios.patch(`http://localhost:5000/api/admin/orders/${id}`, { status: newStatus });
-            if (newStatus === 'completed') {
-                const orderToMove = orders.find(o => o.id === id);
-                setOrders(prev => prev.filter(o => o.id !== id));
-                setHistory(prev => [{...orderToMove, status: 'completed'}, ...prev]);
-            } else {
-                setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
-            }
-        } catch (err) { console.error(err); }
-    };
+    const totalRevenue = history.reduce((sum, h) => sum + (parseFloat(h.total_amount) || 0), 0);
+    const totalOrdersProcessed = history.length;
 
     const categories = [...new Set(fullMenu.map(i => i.category))];
     useEffect(() => {
@@ -175,12 +190,11 @@ const AdminDashboard = () => {
         }
     }, [fullMenu]);
 
-    const filteredMenu = fullMenu.filter(item => {
-        const catMatch = item.category === categoryFilter;
+    const filteredMenu = (fullMenu.find(cat => cat.category === categoryFilter)?.items || []).filter(item => {
         const statusMatch = statusFilter === 'All' || 
                             (statusFilter === 'Available' && item.is_available) || 
                             (statusFilter === 'Unavailable' && !item.is_available);
-        return catMatch && statusMatch;
+        return statusMatch;
     });
 
     if (!isAuthenticated) return (
@@ -277,7 +291,7 @@ const AdminDashboard = () => {
                                     <CalendarDays size={12} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#555' }} />
                                 </div>
                                 <div style={{ padding: '2px 10px', borderRadius: '99px', background: 'rgba(201,169,110,0.1)', border: '1px solid rgba(201,169,110,0.2)', color: '#C9A96E', fontSize: '11px', fontWeight: '600' }}>
-                                    REVENUE: ₹{historySummary.totalRevenue.toLocaleString()}
+                                    REVENUE: ₹{totalRevenue.toLocaleString()}
                                 </div>
                             </div>
                         )}
@@ -291,7 +305,7 @@ const AdminDashboard = () => {
                                 setSoundEnabled(newVal);
                                 if (newVal && audioRef.current) {
                                     audioRef.current.currentTime = 0;
-                                    audioRef.current.play().catch(e => console.log("Prime error:", e));
+                                    audioRef.current.play().catch(e => console.log("Prime:", e));
                                 }
                             }} 
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: soundEnabled ? 'white' : '#555' }}
@@ -326,14 +340,14 @@ const AdminDashboard = () => {
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
                             <AnimatePresence>
                                 {orders.map(order => (
-                                    <motion.div key={order.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '20px' }}>
+                                    <motion.div key={order.id} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '20px' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
                                             <span style={{ fontSize: '18px', fontWeight: 'bold', color: 'white' }}>{order.token_number}</span>
                                             <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#555' }}>Table {order.table_number}</span>
                                         </div>
                                         <div style={{ marginBottom: '20px' }}>
-                                            {order.items.map(item => (
-                                                <div key={item.id} style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>{item.name} × {item.qty}</div>
+                                            {order.items.map((item, idx) => (
+                                                <div key={idx} style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>{item.name} × {item.qty}</div>
                                             ))}
                                         </div>
                                         <div style={{ display: 'flex', gap: '8px' }}>
@@ -351,7 +365,7 @@ const AdminDashboard = () => {
                                             >
                                                 {order.status === 'ready' ? 'READY' : 'MARK READY'}
                                             </button>
-                                            <button onClick={() => updateOrderStatus(order.id, 'completed')} style={{ flex: 1, background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: 'none', padding: '8px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold' }}>COMPLETE</button>
+                                            <button onClick={() => updateOrderStatus(order.id, 'complete')} style={{ flex: 1, background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: 'none', padding: '8px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold' }}>COMPLETE</button>
                                         </div>
                                     </motion.div>
                                 ))}
@@ -359,7 +373,6 @@ const AdminDashboard = () => {
                         </div>
                     ) : activeTab === 'history' ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                            {/* SUMMARY CARDS */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                                 <div className="glass" style={{ padding: '24px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '20px' }}>
                                     <div style={{ padding: '12px', background: 'rgba(34,197,94,0.1)', borderRadius: '12px' }}>
@@ -367,18 +380,18 @@ const AdminDashboard = () => {
                                     </div>
                                     <div>
                                         <p style={{ fontSize: '11px', color: '#555', textTransform: 'uppercase', marginBottom: '4px' }}>Total Revenue</p>
-                                        <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>₹{historySummary.totalRevenue.toLocaleString()}</h3>
+                                        <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>₹{totalRevenue.toLocaleString()}</h3>
                                     </div>
                                 </div>
-                                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="glass" style={{ padding: '24px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                <div className="glass" style={{ padding: '24px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '20px' }}>
                                     <div style={{ padding: '12px', background: 'rgba(201,169,110,0.1)', borderRadius: '12px' }}>
                                         <BarChart3 size={24} color="#C9A96E" />
                                     </div>
                                     <div>
                                         <p style={{ fontSize: '11px', color: '#555', textTransform: 'uppercase', marginBottom: '4px' }}>Orders Processed</p>
-                                        <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>{historySummary.totalOrders}</h3>
+                                        <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>{totalOrdersProcessed}</h3>
                                     </div>
-                                </motion.div>
+                                </div>
                             </div>
 
                             <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '12px', overflow: 'hidden' }}>
@@ -396,12 +409,12 @@ const AdminDashboard = () => {
                                         <tr key={row.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                             <td style={{ padding: '16px 24px', color: 'white' }}>{row.token_number}</td>
                                             <td style={{ padding: '16px 24px' }}>
-                                                {row.items.map((i, idx) => (
+                                                {Array.isArray(row.items) ? row.items.map((i, idx) => (
                                                     <span key={idx}>
                                                         {i.name} x{i.qty}
                                                         {idx < row.items.length - 1 ? ', ' : ''}
                                                     </span>
-                                                ))}
+                                                )) : 'No Items'}
                                             </td>
                                             <td style={{ padding: '16px 24px' }}>{row.table_number}</td>
                                             <td style={{ padding: '16px 24px' }}>₹{row.total_amount}</td>

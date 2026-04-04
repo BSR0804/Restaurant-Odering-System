@@ -38,7 +38,9 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber }) => {
 
   useEffect(() => {
     fetchMenu();
-    
+  }, []);
+
+  useEffect(() => {
     socket.on('menu_update', (data) => {
         const inCart = cart.find(i => i.id === data.id);
         if (inCart && !data.is_available) {
@@ -65,8 +67,26 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber }) => {
   };
 
   if (loading) return (
-    <div className="screen glass" style={{ justifyContent: 'center', alignItems: 'center' }}>
-      <div className="gradient-text" style={{ fontSize: '24px', fontWeight: 'bold' }}>LUXE EATERY</div>
+    <div className="screen" style={{ background: '#0A0A0B' }}>
+        <header className="header container" style={{ padding: '60px 0 0', textAlign: 'center', opacity: 0.5 }}>
+            <div style={{ height: '80px', width: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', margin: '0 auto 16px', border: '1px solid rgba(255,255,255,0.05)' }} className="pulse" />
+            <div style={{ height: '20px', width: '140px', background: 'rgba(255,255,255,0.03)', margin: '0 auto', borderRadius: '4px' }} className="pulse" />
+        </header>
+
+        <div className="container" style={{ marginTop: '40px', padding: '0 24px' }}>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '32px' }}>
+                {[1, 2, 3, 4].map(i => (
+                    <div key={i} style={{ height: '32px', width: '80px', borderRadius: '99px', background: 'rgba(255,255,255,0.03)' }} className="pulse" />
+                ))}
+            </div>
+
+            {[1, 2, 3].map(i => (
+                <div key={i} style={{ marginBottom: '24px', padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ height: '14px', width: '60%', background: 'rgba(255,255,255,0.03)', marginBottom: '12px', borderRadius: '4px' }} className="pulse" />
+                    <div style={{ height: '10px', width: '30%', background: 'rgba(255,255,255,0.02)', borderRadius: '4px' }} className="pulse" />
+                </div>
+            ))}
+        </div>
     </div>
   );
 
