@@ -107,7 +107,12 @@ const AdminDashboard = () => {
         }
 
         socket.on('new-order', (data) => {
-            setOrders(prev => [data, ...prev]);
+            // THE FIX: Deduplication Check
+            setOrders(prev => {
+                const exists = prev.find(o => String(o.id) === String(data.id));
+                return exists ? prev : [data, ...prev];
+            });
+            
             const toastId = Date.now();
             setToasts(prev => [...prev, { id: toastId, token: data.token_number }]);
             setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== toastId)); }, 4000);
@@ -153,7 +158,10 @@ const AdminDashboard = () => {
                 if (newStatus === 'complete') {
                     // Success! Remove from live, add to history
                     setOrders(prev => prev.filter(o => String(o.id) !== String(id)));
-                    setHistory(prev => [updatedOrder, ...prev]);
+                    setHistory(prev => {
+                        const exists = prev.find(h => String(h.id) === String(updatedOrder.id));
+                        return exists ? prev : [updatedOrder, ...prev];
+                    });
                     const toastId = Date.now();
                     setToasts(prev => [...prev, { id: toastId, token: `Success: Order ${updatedOrder.token_number} is Complete` }]);
                     setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== toastId)); }, 4000);

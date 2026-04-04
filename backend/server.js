@@ -55,7 +55,7 @@ app.post('/api/orders/create', async (req, res) => {
 });
 
 app.post('/api/orders/confirm', async (req, res) => {
-  const { table_number, items, total_amount, payment_id } = req.body;
+  const { table_number, items, total_amount, payment_id, user_email } = req.body;
   const token_number = 'TK-' + Math.floor(1000 + Math.random() * 9000);
   
   const { data, error } = await supabase.from('orders').insert({
@@ -63,15 +63,31 @@ app.post('/api/orders/confirm', async (req, res) => {
     items,
     total_amount,
     token_number,
-    status: 'pending'
+    status: 'pending',
+    user_email // Link order to user
   }).select();
 
   if (error) return res.status(500).json({ error: error.message });
   
-  console.log(`💰 Payment Confirmed: ${payment_id || 'MOCK'} | Token: ${token_number}`);
+  console.log(`💰 Payment Confirmed: ${payment_id || 'MOCK'} | Token: ${token_number} | For: ${user_email}`);
   io.to('restaurant-owners').emit('new-order', data[0]);
   
   res.json({ success: true, token: token_number, order_id: data[0].id });
+});
+
+// THE FIX: Fetch personal orders for the User Account Page
+app.get('/api/user/orders', async (req, res) => {
+    const { email } = req.query;
+    if (!email) return res.status(400).json({ error: 'Email required' });
+
+    const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_email', email)
+        .order('created_at', { ascending: false });
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
 });
 
 // Original endpoint for legacy/direct calls

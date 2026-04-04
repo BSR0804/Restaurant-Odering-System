@@ -99,8 +99,8 @@ const AccountPage = () => {
                                     borderRadius: '6px', 
                                     fontSize: '10px', 
                                     fontWeight: 'bold',
-                                    background: order.status === 'completed' ? 'rgba(34,197,94,0.1)' : 'rgba(201,169,110,0.1)',
-                                    color: order.status === 'completed' ? '#22c55e' : '#C9A96E',
+                                    background: order.status === 'complete' ? 'rgba(34,197,94,0.1)' : 'rgba(201,169,110,0.1)',
+                                    color: order.status === 'complete' ? '#22c55e' : '#C9A96E',
                                     textTransform: 'uppercase'
                                 }}>
                                     {order.status}
