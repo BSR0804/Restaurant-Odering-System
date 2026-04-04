@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Plus, Minus, ChevronLeft, AlertCircle, Leaf, Utensils } from 'lucide-react';
+import { ShoppingBag, Plus, Minus, ChevronLeft, AlertCircle, Leaf, Utensils, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
@@ -14,7 +14,17 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber }) => {
   const [justRemoved, setJustRemoved] = useState(null);
   const [vegActive, setVegActive] = useState(false);
   const [nonVegActive, setNonVegActive] = useState(false);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const stored = localStorage.getItem('google_user');
+    if (!stored) {
+      navigate('/');
+      return;
+    }
+    setUser(JSON.parse(stored));
+  }, []);
 
   const fetchMenu = () => {
     axios.get('http://localhost:5000/api/menu')
@@ -63,9 +73,30 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber }) => {
   return (
     <div className="screen">
       <div className="container" style={{ position: 'absolute', top: '40px', left: '0', right: '0', zIndex: 100, pointerEvents: 'none' }}>
-        <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center' }}>
+        <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
            <button onClick={() => navigate('/')} className="btn-ghost" style={{ padding: '10px 20px', borderRadius: '99px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', marginLeft: '20px' }}>
              <ChevronLeft size={16} /> Back
+           </button>
+
+           <button onClick={() => navigate('/account')} style={{ 
+               background: 'rgba(255,255,255,0.03)', 
+               border: '1px solid rgba(255,255,255,0.08)', 
+               color: 'white', 
+               display: 'flex', 
+               alignItems: 'center', 
+               gap: '10px', 
+               padding: '6px 14px', 
+               borderRadius: '99px',
+               cursor: 'pointer',
+               fontSize: '12px',
+               marginRight: '20px'
+           }}>
+             {user?.picture ? (
+                 <img src={user.picture} style={{ width: '20px', height: '20px', borderRadius: '50%' }} alt="DP" />
+             ) : (
+                 <User size={14} color="#C9A96E" />
+             )}
+             {user?.name?.split(' ')[0] || 'Account'}
            </button>
         </div>
       </div>

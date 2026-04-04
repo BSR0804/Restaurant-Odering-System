@@ -6,7 +6,13 @@ import { motion } from 'framer-motion';
 
 const CheckoutPage = ({ cart, clearCart, tableNumber }) => {
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const stored = localStorage.getItem('google_user');
+    if (stored) setUser(JSON.parse(stored));
+  }, []);
 
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 
@@ -28,7 +34,8 @@ const CheckoutPage = ({ cart, clearCart, tableNumber }) => {
       const res = await axios.post('http://localhost:5000/api/orders/create', {
         table_number: tableNumber || 0,
         items: cart,
-        total_amount: cartTotal
+        total_amount: cartTotal,
+        user_email: JSON.parse(localStorage.getItem('google_user') || '{}').email || null
       });
 
       // Handle Mocking
@@ -56,8 +63,8 @@ const CheckoutPage = ({ cart, clearCart, tableNumber }) => {
           await completeOrder(response.razorpay_payment_id);
         },
         prefill: {
-          name: 'Customer',
-          email: 'customer@example.com',
+          name: user?.name || 'Customer',
+          email: user?.email || 'customer@example.com',
           contact: '9999999999'
         },
         theme: {
@@ -81,7 +88,8 @@ const CheckoutPage = ({ cart, clearCart, tableNumber }) => {
              table_number: tableNumber || 0,
              items: cart,
              total_amount: cartTotal,
-             payment_id: payId
+             payment_id: payId,
+             user_email: JSON.parse(localStorage.getItem('google_user') || '{}').email || null
           });
           
           if (res.data.success) {

@@ -5,6 +5,8 @@ import MenuPage from './pages/MenuPage';
 import CheckoutPage from './pages/CheckoutPage';
 import SuccessPage from './pages/SuccessPage';
 import AdminDashboard from './pages/AdminDashboard';
+import AccountPage from './pages/AccountPage';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { io } from 'socket.io-client';
 
 const socket = io('http://localhost:5000');
@@ -54,15 +56,18 @@ function App() {
   const clearCart = () => setCart([]);
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/menu" element={<MenuPage cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} tableNumber={table} />} />
-        <Route path="/checkout" element={<CheckoutPage cart={cart} clearCart={clearCart} tableNumber={table} />} />
-        <Route path="/success" element={<SuccessPage />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-      </Routes>
-    </Router>
+    <GoogleOAuthProvider clientId="345892520340-fbk4bokr6r5hkg5f46qn80rjcqvj3nqj.apps.googleusercontent.com">
+      <Router>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/menu" element={<MenuPage cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} tableNumber={table} />} />
+          <Route path="/checkout" element={<CheckoutPage cart={cart} clearCart={clearCart} tableNumber={table} />} />
+          <Route path="/success" element={<SuccessPage />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/account" element={<AccountPage />} />
+        </Routes>
+      </Router>
+    </GoogleOAuthProvider>
   );
 }
 

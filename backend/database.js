@@ -18,13 +18,15 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_email TEXT,
     table_number INTEGER NOT NULL,
     token_number TEXT NOT NULL,
     items TEXT NOT NULL, -- JSON string
     total_amount REAL NOT NULL,
     status TEXT DEFAULT 'pending', -- pending, paid, ready, completed
     payment_ref TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    completed_at DATETIME
   );
 
   CREATE TABLE IF NOT EXISTS admin (

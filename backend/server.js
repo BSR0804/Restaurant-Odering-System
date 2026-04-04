@@ -97,11 +97,11 @@ app.post('/api/orders/confirm', async (req, res) => {
 
   try {
     const stmt = db.prepare(`
-      INSERT INTO orders (table_number, token_number, items, total_amount, payment_ref, status)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO orders (user_email, table_number, token_number, items, total_amount, payment_ref, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
     
-    const result = stmt.run(table_number, token, JSON.stringify(items), total_amount, payment_id, 'paid');
+    const result = stmt.run(req.body.user_email || null, table_number, token, JSON.stringify(items), total_amount, payment_id, 'paid');
     
     const orderData = {
       id: result.lastInsertRowid,
@@ -143,10 +143,12 @@ app.patch('/api/admin/orders/:id', (req, res) => {
     const { id } = req.params;
 
     try {
-        db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(status, id);
+        const query = status === 'completed' 
+            ? 'UPDATE orders SET status = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?' 
+            : 'UPDATE orders SET status = ? WHERE id = ?';
+            
+        db.prepare(query).run(status, id);
         
-        // Notify all clients (or just the specific one if we had order-specific rooms)
-        // For simplicity in this scale, we broadcast, and clients filter by their own ID/Token
         io.emit('order-status-update', { id: parseInt(id), status });
         
         res.json({ success: true });
@@ -157,8 +159,46 @@ app.patch('/api/admin/orders/:id', (req, res) => {
 
 // GET: Order History (Today's completed orders)
 app.get('/api/history/orders', (req, res) => {
+  const { date } = req.query; // Expected format: YYYY-MM-DD
+  const targetDate = date || new Date().toISOString().split('T')[0];
+
   try {
-    const orders = db.prepare("SELECT * FROM orders WHERE status = 'completed' AND date(created_at) = date('now') ORDER BY created_at DESC").all();
+    const orders = db.prepare(`
+      SELECT * FROM orders 
+      WHERE status = 'completed' 
+      AND date(COALESCE(completed_at, created_at)) = ? 
+      ORDER BY completed_at DESC
+    `).all(targetDate);
+
+    const formattedOrders = orders.map(order => ({
+      ...order,
+      items: JSON.parse(order.items)
+    }));
+
+    // Calculate Summary
+    const totalRevenue = formattedOrders.reduce((sum, o) => sum + o.total_amount, 0);
+    const totalOrders = formattedOrders.length;
+
+    res.json({
+      orders: formattedOrders,
+      summary: {
+        totalRevenue,
+        totalOrders,
+        date: targetDate
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET: User-specific Order History
+app.get('/api/user/orders', (req, res) => {
+  const { email } = req.query;
+  if (!email) return res.status(400).json({ error: "Email required" });
+
+  try {
+    const orders = db.prepare('SELECT * FROM orders WHERE user_email = ? ORDER BY created_at DESC').all(email);
     const formattedOrders = orders.map(order => ({
       ...order,
       items: JSON.parse(order.items)

@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useGoogleLogin } from '@react-oauth/google';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Check, Menu, ShieldCheck, ArrowRight, MapPin } from 'lucide-react';
+import { ChevronRight, Check, Menu, ShieldCheck, ArrowRight, MapPin, User, X } from 'lucide-react';
 
 const LandingPage = () => {
     const navigate = useNavigate();
     const [bgIndex, setBgIndex] = useState(0);
+    const [showNameModal, setShowNameModal] = useState(false);
+    const [customName, setCustomName] = useState('');
     const backgrounds = ['/restaurant_bg.webp', '/restaurant_crowd.jpg'];
 
     useEffect(() => {
@@ -15,6 +19,46 @@ const LandingPage = () => {
         return () => clearInterval(interval);
     }, []);
 
+    const login = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+            console.log('Login Success:', tokenResponse);
+            try {
+                const userInfo = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+                    headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+                });
+                localStorage.setItem('google_user', JSON.stringify({
+                    ...tokenResponse,
+                    email: userInfo.data.email,
+                    name: customName || userInfo.data.name,
+                    picture: userInfo.data.picture
+                }));
+                setShowNameModal(false);
+                navigate('/menu');
+            } catch (err) {
+                console.error('Failed to fetch user info:', err);
+            }
+        },
+        onError: (error) => console.log('Login Failed:', error),
+    });
+
+    const handleBrowseMenu = () => {
+        const user = localStorage.getItem('google_user');
+        if (user) {
+            navigate('/menu');
+        } else {
+            setShowNameModal(true);
+        }
+    };
+
+    const handleStartAuth = (e) => {
+        e.preventDefault();
+        if (customName.trim()) {
+            login();
+        } else {
+            alert("Please enter your name to continue");
+        }
+    };
+
     const fadeIn = {
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
@@ -23,8 +67,6 @@ const LandingPage = () => {
     return (
         <div style={{ background: 'var(--bg)', color: 'white', minHeight: '100vh', overflowX: 'hidden' }}>
             
-            {/* STICKY BRANDING LOGO */}
-            {/* STICKY BRANDING LOGO */}
             <div className="logo-container" style={{ 
                 position: 'fixed', 
                 top: '40px', 
@@ -48,7 +90,6 @@ const LandingPage = () => {
                 />
             </div>
 
-            {/* SECTION 1 — HERO WITH DYNAMIC SLIDESHOW */}
             <header style={{ position: 'relative', height: '100vh', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
                     <AnimatePresence mode="wait">
@@ -72,7 +113,7 @@ const LandingPage = () => {
                             Scan. Order. Enjoy. No waiters, no waiting.
                         </p>
                         <div style={{ display: 'flex', gap: '20px' }}>
-                            <button className="btn-primary" onClick={() => navigate('/menu')}>
+                            <button className="btn-primary" onClick={handleBrowseMenu}>
                                 Browse Menu <ChevronRight size={18} />
                             </button>
                             <button className="btn-ghost" onClick={() => document.getElementById('steps').scrollIntoView({ behavior: 'smooth' })}>
@@ -82,7 +123,6 @@ const LandingPage = () => {
                     </motion.div>
                 </div>
 
-                {/* MARQUEE TICKER */}
                 <div style={{ position: 'absolute', bottom: '0', left: 0, width: '100%', zIndex: 20 }}>
                     <div className="marquee-container">
                         <div className="marquee-content">
@@ -99,7 +139,6 @@ const LandingPage = () => {
                 </div>
             </header>
 
-            {/* SECTION 2 — HOW IT WORKS */}
             <section id="steps" style={{ background: '#0D0D0F', padding: '120px 0', borderBottom: '1px solid var(--card-border)' }}>
                 <div className="container" style={{ textAlign: 'center' }}>
                     <motion.h2 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn} style={{ marginBottom: '80px' }}>
@@ -124,39 +163,6 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            {/* SECTION 3 — FEATURES (REDESIGNED SAAS STYLE) */}
-            <section style={{ 
-                background: '#0D0D10', 
-                padding: '80px 0', 
-                position: 'relative',
-                overflow: 'hidden'
-            }}>
-                {/* Subtle Radial Glow */}
-                <div style={{ 
-                    position: 'absolute', 
-                    top: '50%', 
-                    left: '50%', 
-                    transform: 'translate(-50%, -50%)', 
-                    width: '100%', 
-                    height: '100%', 
-                    background: 'radial-gradient(ellipse 60% 40% at 50% 50%, rgba(201,169,110,0.04) 0%, transparent 70%)',
-                    zIndex: 0,
-                    pointerEvents: 'none'
-                }} />
-
-                <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-                    {/* Section Header */}
-                    <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn} style={{ textAlign: 'center' }}>
-                        <span style={{ fontSize: '13px', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#666', fontWeight: '600', marginBottom: '16px', display: 'block' }}>
-                            Everything you need at the table
-                        </span>
-                        <h2 style={{ fontSize: '36px', fontWeight: '500', marginBottom: '16px' }}>Built for the modern dining experience</h2>
-                        <p style={{ color: 'var(--text-dim)', fontSize: '16px' }}>No app. No account. Just scan, order, and collect.</p>
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* SECTION 5 — FOOTER */}
             <footer style={{ padding: '80px 0', borderTop: '1px solid var(--card-border)', background: '#0A0A0B' }}>
                 <div className="container" style={{ textAlign: 'center' }}>
                     <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.3em', marginBottom: '24px', fontWeight: '700' }}>KC RESTAURANT</h3>
@@ -169,7 +175,7 @@ const LandingPage = () => {
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '32px', marginBottom: '40px' }}>
-                        {['Instagram', 'Facebook', 'Twitter'].map(social => (
+                        {socials.map(social => (
                             <span key={social} style={{ fontSize: '12px', fontWeight: '500', color: 'white', cursor: 'pointer', opacity: 0.6 }}>{social}</span>
                         ))}
                     </div>
@@ -178,8 +184,69 @@ const LandingPage = () => {
                     </p>
                 </div>
             </footer>
+
+            <AnimatePresence>
+                {showNameModal && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        exit={{ opacity: 0 }} 
+                        style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.9, y: 20 }} 
+                            animate={{ scale: 1, y: 0 }} 
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="glass"
+                            style={{ width: '100%', maxWidth: '400px', padding: '40px', position: 'relative' }}
+                        >
+                            <button onClick={() => setShowNameModal(false)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: '#555', cursor: 'pointer' }}>
+                                <X size={20} />
+                            </button>
+                            
+                            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                                <div style={{ width: '60px', height: '60px', background: 'rgba(201,169,110,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                                    <User size={24} color="#C9A96E" />
+                                </div>
+                                <h2 style={{ fontSize: '24px', fontWeight: '300', marginBottom: '8px' }}>Welcome!</h2>
+                                <p style={{ color: 'var(--text-dim)', fontSize: '14px' }}>Please enter your name to browse our menu</p>
+                            </div>
+
+                            <form onSubmit={handleStartAuth}>
+                                <input 
+                                    type="text" 
+                                    placeholder="Your Name" 
+                                    autoFocus
+                                    value={customName}
+                                    onChange={(e) => setCustomName(e.target.value)}
+                                    style={{ 
+                                        width: '100%', 
+                                        height: '56px', 
+                                        background: 'rgba(255,255,255,0.03)', 
+                                        border: '1px solid rgba(255,255,255,0.1)', 
+                                        borderRadius: '12px', 
+                                        padding: '0 20px', 
+                                        color: 'white', 
+                                        fontSize: '16px', 
+                                        marginBottom: '20px',
+                                        outline: 'none'
+                                    }} 
+                                />
+                                <button className="btn-primary" style={{ width: '100%', height: '56px', borderRadius: '12px', display: 'flex', gap: '12px', justifyContent: 'center', alignItems: 'center' }}>
+                                    Continue to Login <ChevronRight size={18} />
+                                </button>
+                                <p style={{ textAlign: 'center', fontSize: '11px', color: '#444', marginTop: '20px', letterSpacing: '0.05em' }}>
+                                    SECURE GOOGLE AUTHENTICATION REQUIRED
+                                </p>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
+
+const socials = ['Instagram', 'Facebook', 'Twitter'];
 
 export default LandingPage;
