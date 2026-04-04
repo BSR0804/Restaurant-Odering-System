@@ -40,7 +40,11 @@ const AdminDashboard = () => {
     const [statusFilter, setStatusFilter] = useState('All');
     const [loadingItems, setLoadingItems] = useState([]);
     const [flashingItems, setFlashingItems] = useState([]);
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const getLocalDateStr = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+    const [selectedDate, setSelectedDate] = useState(localStorage.getItem('admin_selected_date') || getLocalDateStr());
 
     const handleLogin = (e) => {
         e.preventDefault();
@@ -68,7 +72,14 @@ const AdminDashboard = () => {
 
     useEffect(() => {
         const timer = setInterval(() => {
-            setCurrentTime(new Date().toLocaleTimeString());
+            // THE FIX: Explicit IST Time formatting
+            setCurrentTime(new Date().toLocaleTimeString('en-IN', { 
+                timeZone: 'Asia/Kolkata', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: true 
+            }));
         }, 1000);
         return () => clearInterval(timer);
     }, []);
@@ -81,7 +92,8 @@ const AdminDashboard = () => {
         } catch (e) { console.error("LiveOrders Error:", e); }
 
         try {
-            const resHistory = await axios.get(`http://localhost:5000/api/history/orders?date=${selectedDate}`);
+            const tz = new Date().getTimezoneOffset();
+            const resHistory = await axios.get(`http://localhost:5000/api/history/orders?date=${selectedDate}&tzOffset=${tz}`);
             setHistory(Array.isArray(resHistory.data.orders) ? resHistory.data.orders : []);
         } catch (e) { console.error("HistoryOrders Error:", e); }
 
@@ -92,22 +104,21 @@ const AdminDashboard = () => {
         } catch (e) { console.error("Menu Error:", e); }
     };
 
+    const soundRef = React.useRef(soundEnabled);
+    const dateRef = React.useRef(selectedDate);
+    useEffect(() => { soundRef.current = soundEnabled; }, [soundEnabled]);
+    useEffect(() => { dateRef.current = selectedDate; }, [selectedDate]);
+
     useEffect(() => {
         if (!isAuthenticated) return;
         fetchData();
 
-        socket.on('connect', () => {
+        const handleConnect = () => {
             setIsConnected(true);
             socket.emit('join-dashboard');
-        });
-        socket.on('disconnect', () => setIsConnected(false));
-        if (socket.connected) { 
-            socket.emit('join-dashboard'); 
-            setIsConnected(true); 
-        }
-
-        socket.on('new-order', (data) => {
-            // THE FIX: Deduplication Check
+        };
+        const handleDisconnect = () => setIsConnected(false);
+        const handleNewOrder = (data) => {
             setOrders(prev => {
                 const exists = prev.find(o => String(o.id) === String(data.id));
                 return exists ? prev : [data, ...prev];
@@ -117,38 +128,58 @@ const AdminDashboard = () => {
             setToasts(prev => [...prev, { id: toastId, token: data.token_number }]);
             setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== toastId)); }, 4000);
             
-            if (audioRef.current && soundEnabled) {
+            if (audioRef.current && soundRef.current) {
                 audioRef.current.currentTime = 0;
                 audioRef.current.play().catch(e => console.error("Audio prime:", e));
             }
-        });
-
-        socket.on('order_complete', (completedOrder) => {
-            // This handles updates from other clients
+        };
+        const handleOrderComplete = (completedOrder) => {
             setOrders(prev => prev.filter(o => String(o.id) !== String(completedOrder.id)));
-            setHistory(prev => {
-                const exists = prev.find(h => String(h.id) === String(completedOrder.id));
-                return exists ? prev : [completedOrder, ...prev];
-            });
-        });
-
-        socket.on('menu_update', (data) => {
-            setFullMenu(prev => prev.map(item => item.id === data.id ? { ...item, is_available: data.is_available } : item));
+            
+            // THE FIX: Only add to history if order's creation date matches the currently viewed date (Locally)
+            if (completedOrder.created_at) {
+                const d = new Date(completedOrder.created_at);
+                const orderDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                if (orderDate === dateRef.current) {
+                    setHistory(prev => {
+                        const exists = prev.find(h => String(h.id) === String(completedOrder.id));
+                        return exists ? prev : [completedOrder, ...prev];
+                    });
+                }
+            }
+        };
+        const handleMenuUpdate = (data) => {
+            setFullMenu(prev => prev.map(cat => ({
+                ...cat,
+                items: cat.items.map(item => item.id === data.id ? { ...item, is_available: data.is_available } : item)
+            })));
             setFlashingItems(prev => [...prev, data.id]);
             setTimeout(() => { setFlashingItems(prev => prev.filter(id => id !== data.id)); }, 3000);
-        });
+        };
+
+        socket.on('connect', handleConnect);
+        socket.on('disconnect', handleDisconnect);
+        socket.on('new-order', handleNewOrder);
+        socket.on('order_complete', handleOrderComplete);
+        socket.on('menu_update', handleMenuUpdate);
+
+        if (socket.connected) handleConnect();
 
         return () => {
-            socket.off('connect');
-            socket.off('disconnect');
-            socket.off('new-order');
-            socket.off('order_complete');
-            socket.off('menu_update');
+            socket.off('connect', handleConnect);
+            socket.off('disconnect', handleDisconnect);
+            socket.off('new-order', handleNewOrder);
+            socket.off('order_complete', handleOrderComplete);
+            socket.off('menu_update', handleMenuUpdate);
         };
-    }, [isAuthenticated, soundEnabled, selectedDate]);
+    }, [isAuthenticated, selectedDate]);
 
     // THE FIX: Move to history ONLY AFTER Confirmed Cloud Write (Fix 6)
     const updateOrderStatus = async (id, newStatus) => {
+        // OPTIMISTIC UI: Update status locally immediately
+        const previousOrders = [...orders];
+        setOrders(prev => prev.map(o => String(o.id) === String(id) ? { ...o, status: newStatus } : o));
+
         try {
             const res = await axios.patch(`http://localhost:5000/api/admin/orders/${id}`, { status: newStatus });
             
@@ -156,7 +187,6 @@ const AdminDashboard = () => {
                 const updatedOrder = res.data;
                 
                 if (newStatus === 'complete') {
-                    // Success! Remove from live, add to history
                     setOrders(prev => prev.filter(o => String(o.id) !== String(id)));
                     setHistory(prev => {
                         const exists = prev.find(h => String(h.id) === String(updatedOrder.id));
@@ -165,12 +195,12 @@ const AdminDashboard = () => {
                     const toastId = Date.now();
                     setToasts(prev => [...prev, { id: toastId, token: `Success: Order ${updatedOrder.token_number} is Complete` }]);
                     setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== toastId)); }, 4000);
-                } else {
-                    setOrders(prev => prev.map(o => String(o.id) === String(id) ? { ...o, status: newStatus } : o));
                 }
             }
         } catch (err) { 
             console.error("Order Status Update Error:", err);
+            // REVERT on failure
+            setOrders(previousOrders);
             alert("Error: Cloud could not confirm the completion signal.");
         }
     };
@@ -178,11 +208,22 @@ const AdminDashboard = () => {
     const toggleAvailability = async (item) => {
         const newStatus = !item.is_available;
         setLoadingItems(prev => [...prev, item.id]);
+
+        // OPTIMISTIC UPDATE: Update UI immediately
+        setFullMenu(prev => prev.map(cat => ({
+            ...cat,
+            items: cat.items.map(it => it.id === item.id ? { ...it, is_available: newStatus } : it)
+        })));
+
         try {
             await axios.patch(`http://localhost:5000/api/menu/${item.id}/availability`, { is_available: newStatus });
         } catch (err) {
             console.error("Menu Availability Error:", err);
-            setFullMenu(prev => [...prev]); // reset local UI
+            // REVERT on error
+            setFullMenu(prev => prev.map(cat => ({
+                ...cat,
+                items: cat.items.map(it => it.id === item.id ? { ...it, is_available: !newStatus } : it)
+            })));
         } finally {
             setLoadingItems(prev => prev.filter(id => id !== item.id));
         }
@@ -284,7 +325,11 @@ const AdminDashboard = () => {
                                     <input 
                                         type="date" 
                                         value={selectedDate} 
-                                        onChange={(e) => setSelectedDate(e.target.value)}
+                                        onChange={(e) => {
+                                            const newDate = e.target.value;
+                                            setSelectedDate(newDate);
+                                            localStorage.setItem('admin_selected_date', newDate);
+                                        }}
                                         style={{ 
                                             background: 'rgba(255,255,255,0.05)', 
                                             border: '1px solid rgba(255,255,255,0.1)', 
@@ -409,6 +454,7 @@ const AdminDashboard = () => {
                                         <th style={{ padding: '16px 24px' }}>Token</th>
                                         <th style={{ padding: '16px 24px' }}>Items</th>
                                         <th style={{ padding: '16px 24px' }}>Table</th>
+                                        <th style={{ padding: '16px 24px' }}>IST Time</th>
                                         <th style={{ padding: '16px 24px' }}>Price</th>
                                     </tr>
                                 </thead>
@@ -425,6 +471,14 @@ const AdminDashboard = () => {
                                                 )) : 'No Items'}
                                             </td>
                                             <td style={{ padding: '16px 24px' }}>{row.table_number}</td>
+                                            <td style={{ padding: '16px 24px', fontSize: '11px' }}>
+                                                {new Date(row.completed_at || row.created_at).toLocaleTimeString('en-IN', { 
+                                                    timeZone: 'Asia/Kolkata', 
+                                                    hour: '2-digit', 
+                                                    minute: '2-digit',
+                                                    hour12: true 
+                                                })}
+                                            </td>
                                             <td style={{ padding: '16px 24px' }}>₹{row.total_amount}</td>
                                         </tr>
                                     ))}

@@ -164,10 +164,26 @@ app.patch('/api/admin/orders/:id', async (req, res) => {
 
 // THE FIX: Standardized History Fetch (Only Completed)
 app.get('/api/history/orders', async (req, res) => {
-    const { date } = req.query;
-    const today = date || new Date().toISOString().split('T')[0];
-    const startOfDay = today + 'T00:00:00.000Z';
-    const endOfDay = today + 'T23:59:59.999Z';
+    const { date, tzOffset } = req.query; 
+    
+    // THE FIX: Correctly align UTC range with Local Timezone
+    // offsetMin is minutes (e.g. -330 for IST)
+    const offsetMin = parseInt(tzOffset || new Date().getTimezoneOffset());
+    const queryDate = date || new Date(Date.now() - (offsetMin * 60000)).toISOString().split('T')[0];
+    
+    // 1. Create a Date object starting at 00:00:00 of the requested day in UTC
+    const startOfLocalDay = new Date(`${queryDate}T00:00:00Z`);
+    // 2. Adjust it by the offset to find when that moment was in UTC
+    // If IST (-330), this moves 00:00 UTC to 18:30 UTC (the previous day)
+    startOfLocalDay.setMinutes(startOfLocalDay.getMinutes() + offsetMin);
+    
+    // 3. Create the end of the day by adding 24 hours (minus 1ms)
+    const endOfLocalDay = new Date(startOfLocalDay.getTime() + 24 * 60 * 60 * 1000 - 1);
+    
+    const startOfDay = startOfLocalDay.toISOString();
+    const endOfDay = endOfLocalDay.toISOString();
+
+    console.log(`🔍 History Query [IST aware]: ${queryDate} (${startOfDay} to ${endOfDay})`);
 
     const { data, error } = await supabase
         .from('orders')

@@ -40,9 +40,14 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber }) => {
     fetchMenu();
   }, []);
 
+  const cartRef = React.useRef(cart);
   useEffect(() => {
-    socket.on('menu_update', (data) => {
-        const inCart = cart.find(i => i.id === data.id);
+    cartRef.current = cart;
+  }, [cart]);
+
+  useEffect(() => {
+    const handleMenuUpdate = (data) => {
+        const inCart = cartRef.current.find(i => i.id === data.id);
         if (inCart && !data.is_available) {
             setJustRemoved(inCart.name);
             setTimeout(() => setJustRemoved(null), 5000);
@@ -52,10 +57,11 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber }) => {
             ...cat,
             items: cat.items.map(item => item.id === data.id ? { ...item, is_available: data.is_available } : item)
         })));
-    });
+    };
 
-    return () => socket.off('menu_update');
-  }, [cart]);
+    socket.on('menu_update', handleMenuUpdate);
+    return () => socket.off('menu_update', handleMenuUpdate);
+  }, []);
 
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 

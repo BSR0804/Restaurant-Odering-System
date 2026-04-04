@@ -119,7 +119,7 @@ const AccountPage = () => {
                             <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.03)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#444', fontSize: '11px' }}>
                                     <Clock size={12} />
-                                    {new Date(order.created_at).toLocaleDateString()} at {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    {new Date(order.created_at).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' })} at {new Date(order.created_at).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true })}
                                 </div>
                                 <span style={{ fontSize: '15px', fontWeight: '500' }}>₹{order.total_amount}</span>
                             </div>
