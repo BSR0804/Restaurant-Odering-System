@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { io } from 'socket.io-client';
-import axios from 'axios';
-import { Volume2, VolumeX } from 'lucide-react';
-
-const socket = io('http://localhost:5000');
+import { socket, API_BASE_URL } from '../api';
 
 const SuccessPage = () => {
     const location = useLocation();
@@ -20,7 +16,7 @@ const SuccessPage = () => {
         // THE FIX: Sync status across refresh by fetching latest from BD
         const syncStatus = async () => {
             try {
-                const res = await axios.get(`http://localhost:5000/api/orders/${orderId}`);
+                const res = await axios.get(`${API_BASE_URL}/api/orders/${orderId}`);
                 if (res.data) setStatus(res.data.status);
             } catch (e) {
                 console.error("Status Sync Error:", e);

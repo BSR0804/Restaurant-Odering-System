@@ -3,9 +3,7 @@ import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Plus, Minus, ChevronLeft, AlertCircle, Leaf, Utensils, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { io } from 'socket.io-client';
-
-const socket = io('http://localhost:5000');
+import { socket, API_BASE_URL } from '../api';
 
 const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber }) => {
   const [menu, setMenu] = useState([]);
@@ -27,7 +25,7 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber }) => {
   }, []);
 
   const fetchMenu = () => {
-    axios.get('http://localhost:5000/api/menu')
+    axios.get(`${API_BASE_URL}/api/menu`)
       .then(res => {
         setMenu(res.data);
         if (res.data.length > 0) setActiveCategory(res.data[0].category);

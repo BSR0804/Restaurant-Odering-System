@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, CreditCard, ShoppingBag, Truck, Minus, Plus } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { API_BASE_URL } from '../api';
 
 const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber }) => {
   const [loading, setLoading] = useState(false);
@@ -31,7 +31,7 @@ const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber 
     
     try {
       // Step 1: Create Order on Backend
-      const res = await axios.post('http://localhost:5000/api/orders/create', {
+      const res = await axios.post(`${API_BASE_URL}/api/orders/create`, {
         table_number: tableNumber || 0,
         items: cart,
         total_amount: cartTotal,
@@ -99,7 +99,7 @@ const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber 
       try {
           const scheduled_at = isScheduled ? new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString() : null;
 
-          const res = await axios.post('http://localhost:5000/api/orders/confirm', {
+          const res = await axios.post(`${API_BASE_URL}/api/orders/confirm`, {
              table_number: tableNumber || 0,
              items: cart,
              total_amount: cartTotal,

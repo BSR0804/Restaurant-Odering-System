@@ -20,8 +20,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || `${API_BASE}`;
-const socket = io(API_BASE);
+import { socket, API_BASE_URL } from '../api';
 
 const AdminDashboard = () => {
     const [orders, setOrders] = useState([]);
@@ -126,18 +125,18 @@ const AdminDashboard = () => {
     const fetchData = async () => {
         if (!isAuthenticated) return;
         try {
-            const resOrders = await axios.get('http://localhost:5000/api/admin/orders');
+            const resOrders = await axios.get(`${API_BASE_URL}/api/admin/orders`);
             setOrders(Array.isArray(resOrders.data) ? resOrders.data : []);
         } catch (e) { console.error("LiveOrders Error:", e); }
 
         try {
             const tz = new Date().getTimezoneOffset();
-            const resHistory = await axios.get(`http://localhost:5000/api/history/orders?date=${selectedDate}&tzOffset=${tz}`);
+            const resHistory = await axios.get(`${API_BASE_URL}/api/history/orders?date=${selectedDate}&tzOffset=${tz}`);
             setHistory(Array.isArray(resHistory.data.orders) ? resHistory.data.orders : []);
         } catch (e) { console.error("HistoryOrders Error:", e); }
 
         try {
-            const resMenu = await axios.get('http://localhost:5000/api/menu');
+            const resMenu = await axios.get(`${API_BASE_URL}/api/menu`);
             const rawData = resMenu.data || [];
             setFullMenu(rawData);
         } catch (e) { console.error("Menu Error:", e); }
@@ -219,7 +218,7 @@ const AdminDashboard = () => {
         setOrders(prev => prev.map(o => String(o.id) === String(id) ? { ...o, status: newStatus } : o));
 
         try {
-            const res = await axios.patch(`http://localhost:5000/api/admin/orders/${id}`, { status: newStatus });
+            const res = await axios.patch(`${API_BASE_URL}/api/admin/orders/${id}`, { status: newStatus });
             
             if (res.status === 200) {
                 const updatedOrder = res.data;
@@ -254,7 +253,7 @@ const AdminDashboard = () => {
         })));
 
         try {
-            await axios.patch(`http://localhost:5000/api/menu/${item.id}/availability`, { is_available: newStatus });
+            await axios.patch(`${API_BASE_URL}/api/menu/${item.id}/availability`, { is_available: newStatus });
         } catch (err) {
             console.error("Menu Availability Error:", err);
             // REVERT on error

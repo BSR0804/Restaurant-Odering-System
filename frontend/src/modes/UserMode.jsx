@@ -6,9 +6,7 @@ import CheckoutPage from '../pages/CheckoutPage';
 import SuccessPage from '../pages/SuccessPage';
 import AccountPage from '../pages/AccountPage';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { io } from 'socket.io-client';
-
-const socket = io('http://localhost:5000');
+import { socket, API_BASE_URL } from '../api';
 
 function UserMode() {
   const [cart, setCart] = useState([]);
