@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, CreditCard, ShoppingBag, Truck, Minus, Plus } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { API_BASE_URL } from '../api';
 
 const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber }) => {
