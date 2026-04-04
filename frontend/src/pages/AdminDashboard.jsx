@@ -20,7 +20,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const socket = io('http://localhost:5000');
+const API_BASE = import.meta.env.VITE_API_BASE_URL || `${API_BASE}`;
+const socket = io(API_BASE);
 
 const AdminDashboard = () => {
     const [orders, setOrders] = useState([]);
