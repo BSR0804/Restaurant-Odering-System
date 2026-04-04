@@ -394,8 +394,29 @@ const AdminDashboard = () => {
                             <AnimatePresence>
                                 {orders.map(order => (
                                     <motion.div key={order.id} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '20px' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                                            <span style={{ fontSize: '18px', fontWeight: 'bold', color: 'white' }}>{order.token_number}</span>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'flex-start' }}>
+                                            <div>
+                                                <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'white' }}>{order.token_number}</div>
+                                                {/* SCHEDULED ALERT */}
+                                                {order.scheduled_at && (
+                                                    <div style={{ 
+                                                        display: 'flex', 
+                                                        alignItems: 'center', 
+                                                        gap: '6px', 
+                                                        marginTop: '6px', 
+                                                        padding: '4px 10px', 
+                                                        background: 'rgba(201,169,110,0.1)', 
+                                                        border: '1px solid rgba(201,169,110,0.2)', 
+                                                        borderRadius: '6px',
+                                                        width: 'fit-content'
+                                                    }}>
+                                                        <div style={{ width: '4px', height: '4px', background: '#C9A96E', borderRadius: '50%' }} />
+                                                        <span style={{ fontSize: '10px', color: '#C9A96E', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                                                            Scheduled: {new Date(order.scheduled_at).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true })}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
                                             <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#555' }}>Table {order.table_number}</span>
                                         </div>
                                         <div style={{ marginBottom: '20px' }}>

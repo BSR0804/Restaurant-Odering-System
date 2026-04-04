@@ -82,14 +82,25 @@ const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber 
     }
   };
 
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState(new Date().toISOString().split('T')[0]);
+  const [scheduledTime, setScheduledTime] = useState(() => {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() + 30);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  });
+
   const completeOrder = async (payId) => {
       try {
+          const scheduled_at = isScheduled ? `${scheduledDate}T${scheduledTime}:00` : null;
+
           const res = await axios.post('http://localhost:5000/api/orders/confirm', {
              table_number: tableNumber || 0,
              items: cart,
              total_amount: cartTotal,
              payment_id: payId,
-             user_email: JSON.parse(localStorage.getItem('google_user') || '{}').email || null
+             user_email: JSON.parse(localStorage.getItem('google_user') || '{}').email || null,
+             scheduled_at // THE FIX: Pass scheduling info
           });
           
           if (res.data.success) {
@@ -100,7 +111,8 @@ const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber 
                 orderId: res.data.order_id, 
                 items: cart, 
                 total: totalWithTax, 
-                tableNumber 
+                tableNumber,
+                scheduled_at: res.data.scheduled_at
               } });
           }
       } catch (err) {
@@ -191,6 +203,49 @@ const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber 
             <div style={{ fontWeight: '400', fontSize: '14px', marginLeft: '24px' }}>₹{item.price * item.qty}</div>
           </div>
         ))}
+
+        {/* SCHEDULING SECTION */}
+        <div style={{ marginTop: '32px', padding: '24px', background: 'rgba(255,255,255,0.02)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div>
+                <h4 style={{ fontSize: '15px', color: 'white', fontWeight: '500' }}>Schedule for Later?</h4>
+                <p style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>Pick a custom time for your meal (IST)</p>
+              </div>
+              <div 
+                onClick={() => setIsScheduled(!isScheduled)}
+                style={{ 
+                    width: '44px', height: '24px', borderRadius: '12px', background: isScheduled ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)', 
+                    border: `1px solid ${isScheduled ? '#22c55e' : 'rgba(255,255,255,0.1)'}`, position: 'relative', cursor: 'pointer', transition: 'all 0.2s' 
+                }}
+              >
+                  <motion.div animate={{ x: isScheduled ? 22 : 0 }} style={{ width: '18px', height: '18px', borderRadius: '50%', background: isScheduled ? '#22c55e' : '#444', position: 'absolute', top: '2px', left: '2px' }} />
+              </div>
+           </div>
+
+           {isScheduled && (
+               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', gap: '12px' }}>
+                   <div style={{ flex: 1 }}>
+                       <label style={{ fontSize: '9px', color: '#555', textTransform: 'uppercase', marginBottom: '6px', display: 'block' }}>Date</label>
+                       <input 
+                           type="date" 
+                           min={new Date().toISOString().split('T')[0]}
+                           value={scheduledDate}
+                           onChange={(e) => setScheduledDate(e.target.value)}
+                           style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white', fontSize: '13px', outline: 'none' }}
+                       />
+                   </div>
+                   <div style={{ flex: 1 }}>
+                       <label style={{ fontSize: '9px', color: '#555', textTransform: 'uppercase', marginBottom: '6px', display: 'block' }}>Time (24h)</label>
+                       <input 
+                           type="time" 
+                           value={scheduledTime}
+                           onChange={(e) => setScheduledTime(e.target.value)}
+                           style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white', fontSize: '13px', outline: 'none' }}
+                       />
+                   </div>
+               </motion.div>
+           )}
+        </div>
 
         <div className="menu-item" style={{ display: 'block', marginTop: '24px', background: 'transparent', borderTop: '1px solid var(--card-border)' }}>
            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>

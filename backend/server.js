@@ -55,7 +55,7 @@ app.post('/api/orders/create', async (req, res) => {
 });
 
 app.post('/api/orders/confirm', async (req, res) => {
-  const { table_number, items, total_amount, payment_id, user_email } = req.body;
+  const { table_number, items, total_amount, payment_id, user_email, scheduled_at } = req.body;
   const token_number = 'TK-' + Math.floor(1000 + Math.random() * 9000);
   
   const { data, error } = await supabase.from('orders').insert({
@@ -64,15 +64,16 @@ app.post('/api/orders/confirm', async (req, res) => {
     total_amount,
     token_number,
     status: 'pending',
-    user_email // Link order to user
+    user_email, // Link order to user
+    scheduled_at // THE FIX: Optional scheduling
   }).select();
 
   if (error) return res.status(500).json({ error: error.message });
   
-  console.log(`💰 Payment Confirmed: ${payment_id || 'MOCK'} | Token: ${token_number} | For: ${user_email}`);
+  console.log(`💰 Payment Confirmed: ${payment_id || 'MOCK'} | Token: ${token_number} | For: ${user_email} | Scheduled: ${scheduled_at || 'ASAP'}`);
   io.to('restaurant-owners').emit('new-order', data[0]);
   
-  res.json({ success: true, token: token_number, order_id: data[0].id });
+  res.json({ success: true, token: token_number, order_id: data[0].id, scheduled_at: data[0].scheduled_at });
 });
 
 // THE FIX: Fetch personal orders for the User Account Page
