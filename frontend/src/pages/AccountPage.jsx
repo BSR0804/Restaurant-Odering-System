@@ -37,11 +37,7 @@ const AccountPage = () => {
         navigate('/');
     };
 
-    if (loading) return (
-        <div className="screen glass" style={{ justifyContent: 'center', alignItems: 'center' }}>
-            <div className="gradient-text" style={{ fontSize: '20px', fontWeight: 'bold' }}>LOADING YOUR PROFILE</div>
-        </div>
-    );
+
 
     return (
         <div className="screen container animate-global-fade">
@@ -80,7 +76,18 @@ const AccountPage = () => {
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-                {orders.length === 0 ? (
+                {loading ? (
+                    // SHIMMER SKELETON UI
+                    [1, 2, 3].map(i => (
+                        <div key={i} className="menu-item" style={{ flexDirection: 'column', alignItems: 'flex-start', padding: '24px', gap: '16px', border: '1px solid var(--card-border)', background: 'rgba(255,255,255,0.01)', opacity: 0.5 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                                <div style={{ height: '20px', width: '80px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px' }} className="pulse" />
+                                <div style={{ height: '20px', width: '60px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px' }} className="pulse" />
+                            </div>
+                            <div style={{ height: '40px', width: '100%', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }} className="pulse" />
+                        </div>
+                    ))
+                ) : orders.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '60px 0', opacity: 0.5 }}>
                         <ShoppingBag size={40} style={{ marginBottom: '16px' }} />
                         <p>No orders yet. Your history will appear here.</p>
