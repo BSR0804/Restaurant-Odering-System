@@ -1,27 +1,26 @@
-# 🍽️ Kitchen Caboodle: High-Performance Restaurant OS
+# 🍽️ Kitchen Caboodle: Cloud-Native Restaurant OS
 
-A professional, real-time dining and operations ecosystem designed for modern restaurants. This platform bridges the gap between the kitchen and the customer with sub-second synchronization, ultra-clean high-density aesthetics, and high-fidelity auditory signaling.
+A professional, real-time dining and operations ecosystem designed for modern restaurants, now fully migrated to a **High-Integrity Cloud Infrastructure**. This platform bridges the gap between the kitchen and the customer with sub-second synchronization, ultra-clean high-density aesthetics, and production-grade data persistence.
 
 ---
 
 ## ⚡ Core Features
 
-### 1. Neural Audio Orchestration 🔔
+### 1. Cloud-Native Persistence (Supabase) ☁️
+- **PostgreSQL Ledger**: Substituted local SQLite for a mission-critical **Supabase PostgreSQL** instance.
+- **Identity-Mapped History**: Orders are securely tied to **Google Identity** emails, allowing persistent history across devices.
+- **Atomic Sync**: Deduplicated dashboard logic ensures zero "ghost" orders or revenue inflation.
+
+### 2. Neural Audio Orchestration 🔔
 - **Unique Auditory Signatures**: 
   - **Admin**: "Bell" alert for every new incoming order.
   - **Customer**: "Happy Bells" high-fidelity notification specifically when their order is marked as **Ready**.
-- **Browser-Interaction Priming**: Smart logic that "unlocks" browser audio permissions, ensuring alerts fire even on dimmed mobile screens.
-- **Local-Asset Reliability**: All signals are served as local `.wav` files for zero-latency, offline-capable alerting.
+- **Browser-Interaction Priming**: Smart logic that "unlocks" auditory permissions, ensuring alerts fire even on dimmed screens.
 
-### 2. Real-Time Operations ⚡
-- **Live Order Dashboard**: Admins receive instant, mission-critical notifications with visual toasts and audio pings.
-- **Fulfillment States**: Orders transition through "Live", "Ready", and "Completed" states, synced instantly to the customer's dashboard.
-- **Inventory Orchestration**: Toggle "Available / Sold Out" status for any dish; changes propagate to all connected diners in under 0.5s.
-
-### 3. Business Telemetry 📊
-- **Live Revenue Tracker**: Real-time calculation of today's total earnings displayed on the admin header.
-- **Precision Archive**: Detailed order history showing item-level quantity metrics (e.g., *x1, x2*).
-- **QR-DRIVEN**: Dynamic table mapping via QR codes for zero-friction ordering.
+### 3. Elite UX Language 🎨
+- **Seamless Loading**: Replaced jarring loading screens with a **Glassmorphic Skeleton UI** for a high-end browsing experience.
+- **Category Lock**: Browse across 33+ items without losing your scroll or category position when adding to the cart.
+- **Revenue Telemetry**: Real-time business metrics (Revenue and Orders Processed) calculated from confirmed cloud-writes.
 
 ---
 
@@ -31,32 +30,33 @@ A professional, real-time dining and operations ecosystem designed for modern re
 | Technology | Usage |
 | :--- | :--- |
 | **React (Vite)** | Core application framework for high-speed rendering. |
-| **Framer Motion** | Advanced layout-aware animations and smooth transitions. |
+| **Framer Motion** | Advanced layout-aware animations and skeleton UI. |
 | **Socket.io-client** | Real-time bidirectional communication bridge. |
 | **Lucide React** | High-quality, consistent iconography. |
-| **Axios** | Resilient API communication and data fetching. |
-| **Vanilla CSS** | Custom-engineered design system for maximum flexibility. |
+| **Axios** | Resilient API communication with cloud endpoints. |
 
-### **Backend**
+### **Cloud Backend**
 | Technology | Usage |
 | :--- | :--- |
 | **Node.js / Express** | High-concurrency server architecture. |
+| **Supabase (PostgreSQL)** | Persistent, ACID-compliant cloud data storage. |
 | **Socket.io** | Event-driven signaling for order and inventory sync. |
-| **SQLite (better-sqlite3)** | Lightweight, ACID-compliant relational storage. |
-| **CORS** | Secure cross-origin resource orchestration. |
+| **Dotenvx** | Secure cloud-key orchestration. |
 
 ---
 
 ## 🚀 Getting Started
 
 ### 1. Initialize the Neural Core (Backend)
-Navigate to the `backend` directory and launch the server:
+Navigate to the `backend` directory and configure your cloud keys:
+1. Create a `.env` file with your **SUPABASE_URL** and **SUPABASE_ANON_KEY**.
+2. Launch the server:
 ```bash
 cd backend
 npm install
 node server.js
 ```
-*The server initializes `restaurant.db` automatically and listens on `http://localhost:5000`.*
+*The server automatically seeds the Cloud Menu if missing.*
 
 ### 2. Launch the Interface (Frontend)
 Navigate to the `frontend` directory and start the dev server:
@@ -65,19 +65,7 @@ cd frontend
 npm install
 npm run dev
 ```
-*Access the app typically at `http://localhost:5173`.*
-
----
-
-## 🎨 Visual Language
-- **Theme**: Premium Dark Mode (#0A0A0B).
-- **Accents**: Gold (#C9A96E) for luxury and Green/Red for dietary clarity.
-- **Typography**: Inter (Modern, Clean, Professional).
-
----
-
-> [!TIP]
-> **Audio Tip**: Ensure the **Volume Toggle** on the Admin Dashboard is ON to activate the mission-critical alert system. For customers, hearing the "Ready" bell works best if they tap the screen once after the page loads! 🧑‍🍳🔔✨
+*Access the app at `http://localhost:5173`.*
 
 ---
 
@@ -87,7 +75,13 @@ npm run dev
 | :--- | :--- |
 | **Customer Interface** | [http://localhost:5173](http://localhost:5173) |
 | **Admin Dashboard** | [http://localhost:5173/admin](http://localhost:5173/admin) |
+| **User Account** | [http://localhost:5173/account](http://localhost:5173/account) |
 
 ### 🔐 Administrative Access
 - **Username**: `admin`
 - **Password**: `admin123`
+
+---
+
+> [!IMPORTANT]
+> **Cloud Migration**: This project is now fully decoupled from local storage. Every order, status update, and revenue metric is stored in the **Supabase Cloud Ledger**, ensuring 100% data integrity even after a server restart. 🧑‍🍳📊🌐✅✨
