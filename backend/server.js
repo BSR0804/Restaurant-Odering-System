@@ -9,7 +9,12 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
-app.use(cors());
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
+    credentials: true
+}));
 app.use(express.json());
 
 // REAL-TIME SYNC - Owners Channel

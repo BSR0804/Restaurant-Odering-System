@@ -35,18 +35,24 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu
   const fetchMenu = () => {
     setError(null);
     setLoading(true);
-    axios.get(`${API_BASE_URL}/api/menu`)
+    const fullUrl = `${API_BASE_URL}/api/menu`;
+    console.log(`📡 Fetching menu from: ${fullUrl}`);
+
+    axios.get(fullUrl, { timeout: 10000 })
       .then(res => {
         if (!res.data || res.data.length === 0) {
-            setError('Menu is empty. Contact restaurant staff.');
+            setError('Menu is empty in database.');
         } else {
             setMenu(res.data);
             if (activeCategory === 'All') setActiveCategory(res.data[0].category);
         }
       })
       .catch(err => {
-          console.error(err);
-          setError(`Cannot reach server. (URL: ${API_BASE_URL})`);
+          console.error('❌ Menu Fetch Failed:', err);
+          const msg = err.response ? `Server Error (${err.response.status}): ${err.response.data?.error || err.message}` : 
+                      err.request ? `Network Error: No response from server. Check if backend is running at ${API_BASE_URL}` : 
+                      err.message;
+          setError(msg);
       })
       .finally(() => setLoading(false));
   };
