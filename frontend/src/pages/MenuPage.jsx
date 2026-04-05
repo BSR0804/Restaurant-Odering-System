@@ -126,7 +126,7 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber }) => {
       </div>
 
       <header className="header container animate-in" style={{ padding: '60px 0 0', textAlign: 'center' }}>
-        <img src="/logo.jfif" alt="KC Logo" style={{ height: '80px', width: 'auto', borderRadius: '12px', marginBottom: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)' }} />
+        <img src="/logo.jpg" alt="KC Logo" style={{ height: '80px', width: 'auto', borderRadius: '12px', marginBottom: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)' }} />
         
         {/* Veg/Non-Veg Filter */}
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', margin: '0 auto 12px', maxWidth: '280px' }}>

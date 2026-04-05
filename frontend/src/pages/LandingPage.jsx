@@ -78,7 +78,7 @@ const LandingPage = () => {
                 transition: 'all 0.3s ease'
             }}>
                 <img 
-                    src="/logo.jfif" 
+                    src="/logo.jpg" 
                     alt="KC Logo" 
                     style={{ 
                         height: '50px', 

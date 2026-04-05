@@ -74,7 +74,7 @@ const AccountPage = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                     <div style={{ position: 'relative' }}>
                         <img 
-                            src={user?.picture || "/logo.jfif"} 
+                            src={user?.picture || "/logo.jpg"} 
                             alt="Profile" 
                             style={{ width: '64px', height: '64px', borderRadius: '50%', border: '2px solid var(--accent)' }} 
                         />
