@@ -31,6 +31,12 @@ A professional, real-time dining and operations ecosystem designed for modern re
 - **Timezone-Aware History**: Advanced UTC-to-Local conversion ensures that orders placed after midnight correctly appear on the current local day.
 - **Currency Integration**: Full support for Indian Rupee (₹) symbols and lakh-compliant digit grouping.
 
+### 6. Universal Mobile & Network Reliability (New) 📲
+- **Mobile Carrier-Ready**: Optimized **Socket.io** to prioritize **HTTP Polling** as the primary transport, ensuring connectivity even on mobile networks that block WebSockets.
+- **Express 5 / Node 22 Hardening**: Resolved critical wildcard routing conflicts between Express 5 and the latest `path-to-regexp` engines for 100% server uptime.
+- **Dynamic CORS Orchestration**: Implemented a flexible origin-matching system to support any Vercel-generated deployment URL or custom domain without manual configuration.
+- **Automatic Retries**: The Menu fetch now includes 3 automated retries with exponential backoff and 15-second timeouts for a flawless experience on unstable mobile data.
+
 ---
 
 ## 🛠️ Technology Stack
