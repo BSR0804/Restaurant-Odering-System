@@ -5,15 +5,15 @@ const API_BASE_URL = 'https://food-api-production-5ac0.up.railway.app';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 10000
+    timeout: 15000,
 });
 
-// Socket.io with WebSocket + polling fallback for mobile carrier compatibility
+// Socket.io with polling-first transport to ensure it works on any mobile network
 const socket = io(API_BASE_URL, {
-    transports: ['websocket', 'polling'],
-    reconnectionAttempts: 5,
+    transports: ['polling', 'websocket'], // Important for mobile carriers that block WS
+    reconnectionAttempts: 8,
     reconnectionDelay: 2000,
-    timeout: 10000
+    timeout: 15000
 });
 
 export { api, socket, API_BASE_URL };
