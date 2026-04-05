@@ -135,7 +135,7 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu
 
   return (
     <div className="screen">
-      <div className="container" style={{ position: 'absolute', top: '140px', left: '0', right: '0', zIndex: 100, pointerEvents: 'none' }}>
+      <div className="container" style={{ position: 'absolute', top: '100px', left: '0', right: '0', zIndex: 100, pointerEvents: 'none' }}>
          <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <button onClick={() => navigate('/')} className="btn-ghost" style={{ padding: '8px 16px', borderRadius: '99px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', marginLeft: '160px' }}>
               <ChevronLeft size={16} /> Back
@@ -164,7 +164,7 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu
         </div>
       </div>
 
-      <header className="header container animate-in" style={{ padding: '140px 0 0', textAlign: 'center' }}>
+      <header className="header container animate-in" style={{ padding: '100px 0 0', textAlign: 'center' }}>
         
         {/* Veg/Non-Veg Filter */}
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', margin: '0 auto 12px', maxWidth: '280px' }}>
