@@ -447,6 +447,65 @@ section {
   }
 }
 
+/* Menu Page Responsive Actions */
+.header-actions {
+    position: absolute;
+    top: 100px;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.header-actions-inner {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.btn-back-menu {
+    margin-left: 170px;
+}
+
+@media (max-width: 768px) {
+    .header-actions {
+        top: 85px;
+    }
+    .btn-back-menu {
+        margin-left: 100px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-actions {
+        top: 24px;
+        left: 0;
+        right: 0;
+        width: 100%;
+        padding: 0 20px;
+    }
+    .header-actions-inner {
+        flex-direction: row;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-back-menu {
+        margin-left: 0;
+        padding: 6px 12px !important;
+        font-size: 11px !important;
+    }
+    .account-btn-nav {
+        margin-right: 0 !important;
+        padding: 6px 12px !important;
+        font-size: 11px !important;
+    }
+    .header.animate-in {
+        padding-top: 110px !important;
+    }
+}
+
 /* Touch Device Optimizations */
 @media (hover: none) {
   .btn-primary:hover, .btn-ghost:hover {

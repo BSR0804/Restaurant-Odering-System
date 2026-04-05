@@ -143,13 +143,13 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu
 
   return (
     <div className="screen">
-      <div className="container" style={{ position: 'absolute', top: '100px', left: '0', right: '0', zIndex: 100, pointerEvents: 'none' }}>
-         <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <button onClick={() => navigate('/')} className="btn-ghost" style={{ padding: '8px 16px', borderRadius: '99px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', marginLeft: '160px' }}>
+      <div className="header-actions container">
+         <div className="header-actions-inner">
+            <button onClick={() => navigate('/')} className="btn-ghost btn-back-menu" style={{ padding: '8px 16px', borderRadius: '99px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
               <ChevronLeft size={16} /> Back
             </button>
 
-           <button onClick={() => navigate('/account')} style={{ 
+           <button onClick={() => navigate('/account')} className="account-btn-nav" style={{ 
                background: 'rgba(255,255,255,0.03)', 
                border: '1px solid rgba(255,255,255,0.08)', 
                color: 'white', 
@@ -172,7 +172,7 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu
         </div>
       </div>
 
-      <header className="header container animate-in" style={{ padding: '100px 0 0', textAlign: 'center' }}>
+      <header className="header container animate-in" style={{ padding: '100px 0 20px', textAlign: 'center' }}>
         
         {/* Veg/Non-Veg Filter */}
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', margin: '0 auto 12px', maxWidth: '280px' }}>
