@@ -487,14 +487,17 @@ section {
     }
     .header-actions-inner {
         flex-direction: row;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 8px;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 0;
     }
     .btn-back-menu {
         margin-left: 0;
-        padding: 6px 12px !important;
+        margin-top: 76px; /* Positioned below the logo (24px + 60px + 12px gap) */
+        padding: 6px 14px !important;
         font-size: 11px !important;
+        background: rgba(255,255,255,0.03) !important;
+        border-color: rgba(255,255,255,0.08) !important;
     }
     .account-btn-nav {
         margin-right: 0 !important;
@@ -502,7 +505,7 @@ section {
         font-size: 11px !important;
     }
     .header.animate-in {
-        padding-top: 110px !important;
+        padding-top: 140px !important; /* Pushed down more to clear the new Back button position */
     }
 }
 
