@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import axios from 'axios';
 import LandingPage from '../pages/LandingPage';
 import MenuPage from '../pages/MenuPage';
 import CheckoutPage from '../pages/CheckoutPage';
@@ -11,6 +12,14 @@ import { socket, API_BASE_URL } from '../api';
 function UserMode() {
   const [cart, setCart] = useState([]);
   const [table, setTable] = useState(null);
+  const [prefetchedMenu, setPrefetchedMenu] = useState(null);
+
+  // Prefetch menu data immediately on app load (while user is on landing page)
+  useEffect(() => {
+    axios.get(`${API_BASE_URL}/api/menu`)
+      .then(res => setPrefetchedMenu(res.data))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     socket.on('menu_update', (data) => {
@@ -57,7 +66,7 @@ function UserMode() {
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/menu" element={<MenuPage cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} tableNumber={table} />} />
+          <Route path="/menu" element={<MenuPage cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} tableNumber={table} prefetchedMenu={prefetchedMenu} />} />
           <Route path="/checkout" element={<CheckoutPage cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} clearCart={clearCart} tableNumber={table} />} />
           <Route path="/success" element={<SuccessPage />} />
           <Route path="/account" element={<AccountPage />} />

@@ -5,9 +5,9 @@ import { ShoppingBag, Plus, Minus, ChevronLeft, AlertCircle, Leaf, Utensils, Use
 import { useNavigate } from 'react-router-dom';
 import { socket, API_BASE_URL } from '../api';
 
-const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber }) => {
-  const [menu, setMenu] = useState([]);
-  const [loading, setLoading] = useState(true);
+const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu }) => {
+  const [menu, setMenu] = useState(prefetchedMenu || []);
+  const [loading, setLoading] = useState(!prefetchedMenu);
   const [activeCategory, setActiveCategory] = useState('All');
   const [justRemoved, setJustRemoved] = useState(null);
   const [vegActive, setVegActive] = useState(false);
@@ -24,18 +24,25 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber }) => {
     setUser(JSON.parse(stored));
   }, []);
 
+  // Set initial category from prefetched data
+  useEffect(() => {
+    if (prefetchedMenu && prefetchedMenu.length > 0 && activeCategory === 'All') {
+      setActiveCategory(prefetchedMenu[0].category);
+    }
+  }, [prefetchedMenu]);
+
   const fetchMenu = () => {
     axios.get(`${API_BASE_URL}/api/menu`)
       .then(res => {
         setMenu(res.data);
-        if (res.data.length > 0) setActiveCategory(res.data[0].category);
+        if (res.data.length > 0 && activeCategory === 'All') setActiveCategory(res.data[0].category);
         setLoading(false);
       })
       .catch(err => console.error(err));
   };
 
   useEffect(() => {
-    fetchMenu();
+    if (!prefetchedMenu) fetchMenu();
   }, []);
 
   const cartRef = React.useRef(cart);
