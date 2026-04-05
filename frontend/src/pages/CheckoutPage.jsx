@@ -141,7 +141,7 @@ const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber 
   return (
     <div className="screen container animate-global-fade">
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '20px 0 32px' }}>
+      <div className="checkout-header" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         <button onClick={() => navigate('/menu')} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', padding: '5px' }}>
           <ChevronLeft size={20} />
         </button>

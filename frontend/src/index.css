@@ -457,6 +457,10 @@ section {
     pointer-events: none;
 }
 
+.checkout-header {
+    padding: 160px 0 32px;
+}
+
 .header-actions-inner {
     pointer-events: auto;
     display: flex;
@@ -490,6 +494,9 @@ section {
     }
     .header.animate-in {
         padding-top: 100px !important; 
+    }
+    .checkout-header {
+        padding: 90px 0 24px;
     }
 }
 
