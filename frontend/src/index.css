@@ -457,7 +457,7 @@ section {
     pointer-events: none;
 }
 
-.checkout-header {
+.page-header {
     padding: 160px 0 32px;
 }
 
@@ -500,7 +500,7 @@ section {
     .header.animate-in {
         padding-top: 100px !important; 
     }
-    .checkout-header {
+    .page-header {
         padding: 90px 0 24px;
     }
     .schedule-grid {

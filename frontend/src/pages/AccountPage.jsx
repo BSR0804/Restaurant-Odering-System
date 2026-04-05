@@ -62,7 +62,7 @@ const AccountPage = () => {
 
     return (
         <div className="screen container animate-global-fade">
-             <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '60px 0 32px' }}>
+             <div className="page-header" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                 <button onClick={() => navigate('/menu')} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', padding: '5px' }}>
                 <ChevronLeft size={20} />
                 </button>
@@ -70,7 +70,7 @@ const AccountPage = () => {
             </div>
 
             {/* PROFILE CARD */}
-            <div className="glass" style={{ padding: '32px', borderRadius: '24px', marginBottom: '40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className="glass" style={{ padding: '32px', borderRadius: '24px', marginBottom: '40px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                     <div style={{ position: 'relative' }}>
                         <img 
@@ -81,15 +81,16 @@ const AccountPage = () => {
                     </div>
                     <div>
                         <h3 style={{ fontSize: '18px', fontWeight: '500', marginBottom: '4px' }}>{user?.name}</h3>
-                        <p style={{ fontSize: '13px', color: 'var(--text-dim)' }}>{user?.email}</p>
+                        <p style={{ fontSize: '13px', color: 'var(--text-dim)', marginBottom: '16px' }}>{user?.email}</p>
+                        
+                        <button 
+                            onClick={handleLogout}
+                            style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444', padding: '6px 14px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', width: 'fit-content' }}
+                        >
+                            <LogOut size={12} /> Logout
+                        </button>
                     </div>
                 </div>
-                <button 
-                    onClick={handleLogout}
-                    style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444', padding: '8px 16px', borderRadius: '12px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                    <LogOut size={14} /> Logout
-                </button>
             </div>
 
             <div style={{ marginBottom: '24px' }}>
