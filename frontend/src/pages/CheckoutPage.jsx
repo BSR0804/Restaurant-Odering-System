@@ -188,20 +188,20 @@ const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber 
         ))}
 
         {/* SCHEDULING SECTION */}
-        <div style={{ marginTop: '32px', padding: '24px', background: 'rgba(255,255,255,0.02)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <div>
-                <h4 style={{ fontSize: '15px', color: 'white', fontWeight: '500' }}>Schedule for Later?</h4>
-                <p style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>Pick a custom time for your meal (IST)</p>
+                <h4 style={{ fontSize: '13px', color: 'white', fontWeight: '500' }}>Schedule for Later?</h4>
+                <p style={{ fontSize: '10px', color: 'var(--text-dim)', marginTop: '2px' }}>Pick a custom time for your meal (IST)</p>
               </div>
               <div 
                 onClick={() => setIsScheduled(!isScheduled)}
                 style={{ 
-                    width: '44px', height: '24px', borderRadius: '12px', background: isScheduled ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)', 
+                    width: '36px', height: '20px', borderRadius: '10px', background: isScheduled ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)', 
                     border: `1px solid ${isScheduled ? '#22c55e' : 'rgba(255,255,255,0.1)'}`, position: 'relative', cursor: 'pointer', transition: 'all 0.2s' 
                 }}
               >
-                  <motion.div animate={{ x: isScheduled ? 22 : 0 }} style={{ width: '18px', height: '18px', borderRadius: '50%', background: isScheduled ? '#22c55e' : '#444', position: 'absolute', top: '2px', left: '2px' }} />
+                  <motion.div animate={{ x: isScheduled ? 16 : 0 }} style={{ width: '14px', height: '14px', borderRadius: '50%', background: isScheduled ? '#22c55e' : '#444', position: 'absolute', top: '2px', left: '2px' }} />
               </div>
            </div>
 
