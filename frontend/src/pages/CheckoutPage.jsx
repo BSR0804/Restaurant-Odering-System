@@ -208,7 +208,7 @@ const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber 
           </div>
 
           {isScheduled && (
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', gap: '12px' }}>
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="schedule-grid">
               <div style={{ flex: 1 }}>
                 <label style={{ fontSize: '9px', color: '#555', textTransform: 'uppercase', marginBottom: '6px', display: 'block' }}>Date</label>
                 <input

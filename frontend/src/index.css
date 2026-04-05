@@ -461,6 +461,11 @@ section {
     padding: 160px 0 32px;
 }
 
+.schedule-grid {
+    display: flex;
+    gap: 12px;
+}
+
 .header-actions-inner {
     pointer-events: auto;
     display: flex;
@@ -497,6 +502,10 @@ section {
     }
     .checkout-header {
         padding: 90px 0 24px;
+    }
+    .schedule-grid {
+        flex-direction: column;
+        gap: 16px;
     }
 }
 
