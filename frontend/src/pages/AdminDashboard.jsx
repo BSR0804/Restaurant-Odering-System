@@ -71,8 +71,11 @@ const AdminDashboard = () => {
     const [loadingItems, setLoadingItems] = useState([]);
     const [flashingItems, setFlashingItems] = useState([]);
     const getLocalDateStr = () => {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        // Force IST (Indian Standard Time) regardless of browser/server timezone
+        const now = new Date();
+        const istOptions = { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' };
+        const parts = new Intl.DateTimeFormat('en-CA', istOptions).format(now); // en-CA gives YYYY-MM-DD
+        return parts;
     };
     const [selectedDate, setSelectedDate] = useState(getLocalDateStr());
 
@@ -171,7 +174,7 @@ const AdminDashboard = () => {
             setOrders(prev => prev.filter(o => String(o.id) !== String(completedOrder.id)));
             if (completedOrder.created_at) {
                 const d = new Date(completedOrder.created_at);
-                const orderDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                const orderDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(d);
                 if (orderDate === dateRef.current) {
                     setHistory(prev => {
                         const exists = prev.find(h => String(h.id) === String(completedOrder.id));
