@@ -138,31 +138,8 @@ const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber 
 
   return (
     <div className="screen container animate-global-fade">
-      {/* STICKY BRANDING LOGO */}
-      <div className="logo-container" style={{ 
-          position: 'fixed', 
-          top: '40px', 
-          left: '40px', 
-          zIndex: 100,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          transition: 'all 0.3s ease'
-      }}>
-          <img 
-              src="/logo.jpg" 
-              alt="KC Logo" 
-              style={{ 
-                  height: '90px', 
-                  width: 'auto', 
-                  borderRadius: '12px', 
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-                  border: '1px solid rgba(255,255,255,0.15)'
-              }} 
-          />
-      </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '120px 0 32px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '180px 0 32px' }}>
         <button onClick={() => navigate('/menu')} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', padding: '5px' }}>
            <ChevronLeft size={20} />
         </button>

@@ -409,8 +409,25 @@ section {
 
 /* Desktop Logo Default */
 .logo-container {
-    height: 100px;
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 12px;
     transition: all 0.3s ease;
+    pointer-events: none; /* Let clicks pass through if it's just a logo */
+}
+
+.logo-container img {
+    height: 120px;
+    width: auto;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.15);
+    pointer-events: auto; /* Re-enable for the image itself */
+    cursor: pointer;
 }
 
 @media (max-width: 480px) {
@@ -422,9 +439,11 @@ section {
   
   /* Mobile Logo scale */
   .logo-container {
-      height: 60px !important;
-      top: 24px !important;
-      left: 24px !important;
+      top: 24px;
+      left: 24px;
+  }
+  .logo-container img {
+      height: 60px;
   }
 }
 

@@ -135,11 +135,11 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu
 
   return (
     <div className="screen">
-      <div className="container" style={{ position: 'absolute', top: '40px', left: '0', right: '0', zIndex: 100, pointerEvents: 'none' }}>
-        <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-           <button onClick={() => navigate('/')} className="btn-ghost" style={{ padding: '10px 20px', borderRadius: '99px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', marginLeft: '20px' }}>
-             <ChevronLeft size={16} /> Back
-           </button>
+      <div className="container" style={{ position: 'absolute', top: '180px', left: '0', right: '0', zIndex: 100, pointerEvents: 'none' }}>
+         <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <button onClick={() => navigate('/')} className="btn-ghost" style={{ padding: '10px 20px', borderRadius: '99px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', marginLeft: '0px' }}>
+              <ChevronLeft size={16} /> Back
+            </button>
 
            <button onClick={() => navigate('/account')} style={{ 
                background: 'rgba(255,255,255,0.03)', 
@@ -164,8 +164,7 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu
         </div>
       </div>
 
-      <header className="header container animate-in" style={{ padding: '60px 0 0', textAlign: 'center' }}>
-        <img src="/logo.jpg" alt="KC Logo" style={{ height: '90px', width: 'auto', borderRadius: '12px', marginBottom: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)' }} />
+      <header className="header container animate-in" style={{ padding: '180px 0 0', textAlign: 'center' }}>
         
         {/* Veg/Non-Veg Filter */}
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', margin: '0 auto 12px', maxWidth: '280px' }}>

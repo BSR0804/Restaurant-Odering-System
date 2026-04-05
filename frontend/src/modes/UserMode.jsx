@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import axios from 'axios';
 import LandingPage from '../pages/LandingPage';
 import MenuPage from '../pages/MenuPage';
@@ -62,6 +62,11 @@ function UserMode() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "345892520340-fbk4bokr6r5hkg5f46qn80rjcqvj3nqj.apps.googleusercontent.com"}>
       <Router>
+        <div className="logo-container">
+          <Link to="/">
+             <img src="/logo.jpg" alt="KC Logo" />
+          </Link>
+        </div>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/menu" element={<MenuPage cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} tableNumber={table} prefetchedMenu={prefetchedMenu} />} />
