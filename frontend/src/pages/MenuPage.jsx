@@ -8,6 +8,7 @@ import { socket, API_BASE_URL } from '../api';
 const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu }) => {
   const [menu, setMenu] = useState(prefetchedMenu || []);
   const [loading, setLoading] = useState(!prefetchedMenu);
+  const [error, setError] = useState(null);
   const [activeCategory, setActiveCategory] = useState('All');
   const [justRemoved, setJustRemoved] = useState(null);
   const [vegActive, setVegActive] = useState(false);
@@ -32,13 +33,22 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu
   }, [prefetchedMenu]);
 
   const fetchMenu = () => {
+    setError(null);
+    setLoading(true);
     axios.get(`${API_BASE_URL}/api/menu`)
       .then(res => {
-        setMenu(res.data);
-        if (res.data.length > 0 && activeCategory === 'All') setActiveCategory(res.data[0].category);
-        setLoading(false);
+        if (!res.data || res.data.length === 0) {
+            setError('Menu is empty. Contact restaurant staff.');
+        } else {
+            setMenu(res.data);
+            if (activeCategory === 'All') setActiveCategory(res.data[0].category);
+        }
       })
-      .catch(err => console.error(err));
+      .catch(err => {
+          console.error(err);
+          setError(`Cannot reach server. (URL: ${API_BASE_URL})`);
+      })
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -98,6 +108,22 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu
                 </div>
             ))}
         </div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="screen" style={{ background: '#0A0A0B', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 40px' }}>
+        <div style={{ width: '60px', height: '60px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+            <AlertCircle size={24} color="#ef4444" />
+        </div>
+        <h3 style={{ fontSize: '18px', fontWeight: '400', color: 'white', marginBottom: '12px' }}>Loading Error</h3>
+        <p style={{ fontSize: '14px', color: '#666', marginBottom: '32px', lineHeight: '1.6' }}>{error}</p>
+        <button onClick={fetchMenu} className="btn-primary" style={{ width: 'auto', padding: '12px 32px' }}>
+            Retry
+        </button>
+        <button onClick={() => navigate('/')} className="btn-ghost" style={{ marginTop: '16px' }}>
+            Back to Home
+        </button>
     </div>
   );
 
