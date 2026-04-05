@@ -81,7 +81,7 @@ const LandingPage = () => {
                     src="/logo.jfif" 
                     alt="KC Logo" 
                     style={{ 
-                        height: 'inherit', 
+                        height: '50px', 
                         width: 'auto', 
                         borderRadius: '12px', 
                         boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
