@@ -7,15 +7,42 @@ const { supabase, seedCloudMenu } = require('./database');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
 
+// Socket.io with explicit CORS and transport fallback
+const io = new Server(server, {
+  cors: {
+    origin: [
+      'https://restaurant-odering-system.vercel.app',
+      'http://localhost:5173',
+      'http://localhost:3000'
+    ],
+    methods: ['GET', 'POST']
+  },
+  transports: ['websocket', 'polling'],
+  allowEIO3: true
+});
+
+// CORS — explicit origins (wildcard + credentials is invalid per spec)
 app.use(cors({
-    origin: '*',
+    origin: [
+      'https://restaurant-odering-system.vercel.app',
+      'http://localhost:5173',
+      'http://localhost:3000'
+    ],
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
     credentials: true
 }));
+
+// Handle preflight OPTIONS requests explicitly
+app.options('*', cors());
+
 app.use(express.json());
+
+// Health check endpoint — prevents Railway cold starts
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // REAL-TIME SYNC - Owners Channel
 io.on('connection', (socket) => {

@@ -32,29 +32,37 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu
     }
   }, [prefetchedMenu]);
 
-  const fetchMenu = () => {
+  const fetchMenu = async (retries = 3, delay = 1500) => {
     setError(null);
     setLoading(true);
     const fullUrl = `${API_BASE_URL}/api/menu`;
     console.log(`📡 Fetching menu from: ${fullUrl}`);
 
-    axios.get(fullUrl, { timeout: 10000 })
-      .then(res => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const res = await axios.get(fullUrl, { timeout: 8000 });
         if (!res.data || res.data.length === 0) {
-            setError('Menu is empty in database.');
+          setError('Menu is empty in database.');
         } else {
-            setMenu(res.data);
-            if (activeCategory === 'All') setActiveCategory(res.data[0].category);
+          setMenu(res.data);
+          if (activeCategory === 'All') setActiveCategory(res.data[0].category);
+          setError(null);
         }
-      })
-      .catch(err => {
-          console.error('❌ Menu Fetch Failed:', err);
+        setLoading(false);
+        return;
+      } catch (err) {
+        console.warn(`⚠️ Menu fetch attempt ${i + 1}/${retries} failed:`, err.message);
+        if (i === retries - 1) {
           const msg = err.response ? `Server Error (${err.response.status}): ${err.response.data?.error || err.message}` : 
                       err.request ? `Network Error: No response from server. Check if backend is running at ${API_BASE_URL}` : 
                       err.message;
           setError(msg);
-      })
-      .finally(() => setLoading(false));
+          setLoading(false);
+          return;
+        }
+        await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+      }
+    }
   };
 
   useEffect(() => {
