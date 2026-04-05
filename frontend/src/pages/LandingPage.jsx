@@ -174,11 +174,7 @@ const LandingPage = () => {
                         </span>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '32px', marginBottom: '40px' }}>
-                        {socials.map(social => (
-                            <span key={social} style={{ fontSize: '12px', fontWeight: '500', color: 'white', cursor: 'pointer', opacity: 0.6 }}>{social}</span>
-                        ))}
-                    </div>
+
                     <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', letterSpacing: '0.05em' }}>
                         © 2026 KC RESTAURANT. ALL RIGHTS RESERVED.
                     </p>
@@ -247,6 +243,6 @@ const LandingPage = () => {
     );
 };
 
-const socials = ['Instagram', 'Facebook', 'Twitter'];
+
 
 export default LandingPage;
