@@ -190,7 +190,7 @@ const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber 
         ))}
 
         {/* SCHEDULING SECTION */}
-        <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <div>
               <h4 style={{ fontSize: '13px', color: 'white', fontWeight: '500' }}>Schedule for Later?</h4>
@@ -209,7 +209,7 @@ const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber 
 
           {isScheduled && (
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="schedule-grid">
-              <div style={{ flex: 1 }}>
+              <div className="schedule-item">
                 <label style={{ fontSize: '9px', color: '#555', textTransform: 'uppercase', marginBottom: '6px', display: 'block' }}>Date</label>
                 <input
                   type="date"
@@ -219,7 +219,7 @@ const CheckoutPage = ({ cart, addToCart, removeFromCart, clearCart, tableNumber 
                   style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white', fontSize: '13px', outline: 'none' }}
                 />
               </div>
-              <div style={{ flex: 1 }}>
+              <div className="schedule-item">
                 <label style={{ fontSize: '9px', color: '#555', textTransform: 'uppercase', marginBottom: '6px', display: 'block' }}>Time (24h)</label>
                 <input
                   type="time"
