@@ -74,7 +74,7 @@ const AdminDashboard = () => {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     };
-    const [selectedDate, setSelectedDate] = useState(localStorage.getItem('admin_selected_date') || getLocalDateStr());
+    const [selectedDate, setSelectedDate] = useState(getLocalDateStr());
 
     const handleLogin = (e) => {
         e.preventDefault();
