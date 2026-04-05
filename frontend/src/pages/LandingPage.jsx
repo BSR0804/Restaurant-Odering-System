@@ -139,9 +139,9 @@ const LandingPage = () => {
                 </div>
             </header>
 
-            <section id="steps" style={{ background: '#0D0D0F', padding: '120px 0', borderBottom: '1px solid var(--card-border)' }}>
+            <section id="steps" style={{ background: '#0D0D0F', padding: '60px 0', borderBottom: '1px solid var(--card-border)' }}>
                 <div className="container" style={{ textAlign: 'center' }}>
-                    <motion.h2 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn} style={{ marginBottom: '80px' }}>
+                    <motion.h2 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn} style={{ marginBottom: '40px' }}>
                         Three steps to your table
                     </motion.h2>
 
@@ -152,8 +152,8 @@ const LandingPage = () => {
                             { num: '03', title: 'Pay and get your token', desc: 'Check out securely and receive your unique pickup token.' }
                         ].map((step, i) => (
                             <React.Fragment key={i}>
-                                <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeIn} style={{ flex: '1', minWidth: '300px', padding: '48px 32px', textAlign: 'left', borderRadius: '4px' }} className="glass">
-                                    <div style={{ fontSize: '48px', fontWeight: '700', color: 'rgba(255,255,255,0.1)', marginBottom: '32px' }}>{step.num}</div>
+                                <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeIn} style={{ flex: '1', minWidth: '280px', padding: '32px 24px', textAlign: 'left', borderRadius: '4px' }} className="glass">
+                                    <div style={{ fontSize: '36px', fontWeight: '700', color: 'rgba(255,255,255,0.1)', marginBottom: '16px' }}>{step.num}</div>
                                     <h3 style={{ fontSize: '16px', fontWeight: '500', marginBottom: '12px' }}>{step.title}</h3>
                                     <p style={{ fontSize: '14px', color: 'var(--text-dim)' }}>{step.desc}</p>
                                 </motion.div>
@@ -163,12 +163,12 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            <footer style={{ padding: '80px 0', borderTop: '1px solid var(--card-border)', background: '#0A0A0B' }}>
+            <footer style={{ padding: '40px 0', borderTop: '1px solid var(--card-border)', background: '#0A0A0B' }}>
                 <div className="container" style={{ textAlign: 'center' }}>
-                    <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.3em', marginBottom: '24px', fontWeight: '700' }}>KC RESTAURANT</h3>
-                    <p style={{ fontSize: '13px', color: 'var(--text-dim)', marginBottom: '32px' }}>Powered by QR Ordering</p>
+                    <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.3em', marginBottom: '12px', fontWeight: '700' }}>KC RESTAURANT</h3>
+                    <p style={{ fontSize: '13px', color: 'var(--text-dim)', marginBottom: '16px' }}>Powered by QR Ordering</p>
                     
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '40px', color: '#888', fontSize: '14px', maxWidth: '600px', margin: '0 auto 40px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '20px', color: '#888', fontSize: '14px', maxWidth: '600px', margin: '0 auto 20px' }}>
                         <span style={{ color: 'white', fontWeight: '500', lineHeight: '1.5', textAlign: 'center' }}>
                             Near Ramphal Chowk Rd, Opposite to Vandana Printers, Block C, Sector 7 Dwarka, Dwarka, New Delhi, Delhi, 110077
                         </span>
