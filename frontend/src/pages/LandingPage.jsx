@@ -166,7 +166,7 @@ const LandingPage = () => {
             <footer style={{ padding: '40px 0', borderTop: '1px solid var(--card-border)', background: '#0A0A0B' }}>
                 <div className="container" style={{ textAlign: 'center' }}>
                     <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.3em', marginBottom: '12px', fontWeight: '700' }}>KC RESTAURANT</h3>
-                    <p style={{ fontSize: '13px', color: 'var(--text-dim)', marginBottom: '16px' }}>Powered by QR Ordering</p>
+
                     
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '20px', color: '#888', fontSize: '14px', maxWidth: '600px', margin: '0 auto 20px' }}>
                         <span style={{ color: 'white', fontWeight: '500', lineHeight: '1.5', textAlign: 'center' }}>
