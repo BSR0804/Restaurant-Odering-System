@@ -81,7 +81,7 @@ const LandingPage = () => {
                     src="/logo.jpg" 
                     alt="KC Logo" 
                     style={{ 
-                        height: '50px', 
+                        height: '120px', 
                         width: 'auto', 
                         borderRadius: '12px', 
                         boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
