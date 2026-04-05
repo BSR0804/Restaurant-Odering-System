@@ -144,11 +144,7 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu
   return (
     <div className="screen">
       <div className="header-actions container">
-         <div className="header-actions-inner">
-            <button onClick={() => navigate('/')} className="btn-ghost btn-back-menu" style={{ padding: '8px 16px', borderRadius: '99px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
-              <ChevronLeft size={16} /> Back
-            </button>
-
+         <div className="header-actions-inner" style={{ justifyContent: 'flex-end' }}>
            <button onClick={() => navigate('/account')} className="account-btn-nav" style={{ 
                background: 'rgba(255,255,255,0.03)', 
                border: '1px solid rgba(255,255,255,0.08)', 
@@ -174,8 +170,20 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu
 
       <header className="header container animate-in" style={{ padding: '100px 0 20px', textAlign: 'center' }}>
         
-        {/* Veg/Non-Veg Filter */}
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', margin: '0 auto 12px', maxWidth: '280px' }}>
+        {/* Veg/Non-Veg Filter Row */}
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', margin: '0 auto 12px', flexWrap: 'nowrap', alignItems: 'center' }}>
+            {/* Inline Back Button */}
+            <button 
+                onClick={() => navigate('/')} 
+                className="btn-back-inline"
+                style={{ 
+                    height: '36px', padding: '0 12px', borderRadius: '999px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.2s', border: '1px solid rgba(255,255,255,0.1)',
+                    background: 'rgba(255,255,255,0.03)', color: '#fff'
+                }}
+            >
+                <ChevronLeft size={14} /> Back
+            </button>
+
             {/* Veg Button */}
             <button 
                 onClick={() => { 

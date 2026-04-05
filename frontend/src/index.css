@@ -464,19 +464,11 @@ section {
     justify-content: space-between;
 }
 
-.btn-back-menu {
-    margin-left: 170px;
-}
-
 @media (max-width: 768px) {
     .header-actions {
         top: 85px;
     }
-    .btn-back-menu {
-        margin-left: 100px;
-    }
 }
-
 @media (max-width: 480px) {
     .header-actions {
         top: 24px;
@@ -487,17 +479,9 @@ section {
     }
     .header-actions-inner {
         flex-direction: row;
-        justify-content: space-between;
-        align-items: flex-start;
+        justify-content: flex-end;
+        align-items: center;
         gap: 0;
-    }
-    .btn-back-menu {
-        margin-left: 0;
-        margin-top: 76px; /* Positioned below the logo (24px + 60px + 12px gap) */
-        padding: 6px 14px !important;
-        font-size: 11px !important;
-        background: rgba(255,255,255,0.03) !important;
-        border-color: rgba(255,255,255,0.08) !important;
     }
     .account-btn-nav {
         margin-right: 0 !important;
@@ -505,7 +489,7 @@ section {
         font-size: 11px !important;
     }
     .header.animate-in {
-        padding-top: 140px !important; /* Pushed down more to clear the new Back button position */
+        padding-top: 100px !important; 
     }
 }
 
