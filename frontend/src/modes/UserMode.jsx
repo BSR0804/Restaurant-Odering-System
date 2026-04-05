@@ -62,7 +62,7 @@ function UserMode() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "345892520340-fbk4bokr6r5hkg5f46qn80rjcqvj3nqj.apps.googleusercontent.com"}>
       <Router>
-        <div className="logo-container" style={{ position: 'fixed', top: '40px', left: '40px', zIndex: 9999 }}>
+        <div className="logo-container">
           <Link to="/">
              <img src="/logo.jpg" alt="KC Logo" />
           </Link>
