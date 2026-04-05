@@ -178,6 +178,9 @@ const LandingPage = () => {
                     <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', letterSpacing: '0.05em' }}>
                         © 2026 KC RESTAURANT. ALL RIGHTS RESERVED.
                     </p>
+                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.05em', marginTop: '8px' }}>
+                        Made by : BHASKAR SHAMO RAY
+                    </p>
                 </div>
             </footer>
 
