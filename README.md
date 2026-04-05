@@ -80,17 +80,18 @@ cd frontend
 npm install
 npm run dev
 ```
-*Access the app at `http://localhost:5173`.*
+*Access the app at `https://restaurant-odering-system.vercel.app`.*
 
 ---
 
-## 🔗 Project Entry Points
+## 🔗 Project Entry Points (Production)
 
 | Portal | URL |
 | :--- | :--- |
-| **Customer Interface** | [http://localhost:5173](http://localhost:5173) |
-| **Admin Dashboard** | [http://localhost:5173/admin](http://localhost:5173/admin) |
-| **User Account** | [http://localhost:5173/account](http://localhost:5173/account) |
+| **Customer Interface** | [https://restaurant-odering-system.vercel.app](https://restaurant-odering-system.vercel.app) |
+| **Admin Dashboard** | [https://restaurant-odering-system.vercel.app/admin](https://restaurant-odering-system.vercel.app/admin) |
+| **User Account** | [https://restaurant-odering-system.vercel.app/account](https://restaurant-odering-system.vercel.app/account) |
+| **Backend API (Railway)** | [https://food-api-production-5ac0.up.railway.app](https://food-api-production-5ac0.up.railway.app) |
 
 ### 🔐 Administrative Access
 - **Username**: `admin`
@@ -99,4 +100,4 @@ npm run dev
 ---
 
 > [!IMPORTANT]
-> **Cloud Migration**: This project is now fully decoupled from local storage. Every order, status update, and revenue metric is stored in the **Supabase Cloud Ledger**, ensuring 100% data integrity even after a server restart. 🧑‍🍳📊🌐✅✨
+> **Production Status**: This project is now fully decoupled from local storage and served via **Vercel Edge** and **Railway Cloud**. Every order, status update, and revenue metric is stored in the **Supabase Cloud Ledger**, ensuring 100% data integrity even after a server restart. 🧑‍🍳📊🌐✅✨
