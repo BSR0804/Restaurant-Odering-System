@@ -14,11 +14,9 @@ function UserMode() {
   const [table, setTable] = useState(null);
   const [prefetchedMenu, setPrefetchedMenu] = useState(null);
 
-  // Prefetch menu data immediately on app load (while user is on landing page)
+  // Removed redundant/silent prefetch so MenuPage handles it with full error reporting
   useEffect(() => {
-    axios.get(`${API_BASE_URL}/api/menu`)
-      .then(res => setPrefetchedMenu(res.data))
-      .catch(() => {});
+    // We let MenuPage handle fetching to show proper loading/error states
   }, []);
 
   useEffect(() => {
