@@ -467,10 +467,13 @@ section {
 }
 
 .header-actions-inner {
-    pointer-events: auto;
+    pointer-events: none;
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+.header-actions-inner > * {
+    pointer-events: auto;
 }
 
 @media (max-width: 768px) {
