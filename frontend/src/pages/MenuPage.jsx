@@ -95,9 +95,8 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 
   const filterItems = (items) => {
-    if ((!vegActive && !nonVegActive) || (vegActive && nonVegActive)) return items;
-    if (vegActive) return items.filter(i => i.type === 'veg');
-    if (nonVegActive) return items.filter(i => i.type === 'non-veg');
+    if (vegActive) return items.filter(i => String(i.type).toLowerCase().trim() === 'veg');
+    if (nonVegActive) return items.filter(i => String(i.type).toLowerCase().trim() === 'non-veg');
     return items;
   };
 
@@ -185,19 +184,21 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu
             </button>
 
             {/* Veg Button */}
-            <button 
-                onClick={() => { 
-                    setVegActive(!vegActive);
-                    setNonVegActive(false); 
+            <button
+                type="button"
+                onClick={() => {
+                    setVegActive(prev => !prev);
+                    setNonVegActive(false);
                 }}
-                style={{ 
-                    height: '36px', padding: '0 16px', borderRadius: '999px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.2s', border: '1px solid',
-                    background: vegActive ? 'rgba(22,163,74,0.08)' : 'rgba(255,255,255,0.03)',
-                    borderColor: vegActive ? 'rgba(22,163,74,0.25)' : 'rgba(255,255,255,0.08)',
-                    color: vegActive ? '#16a34a' : '#666'
+                style={{
+                    height: '36px', padding: '0 16px', borderRadius: '999px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', border: '1.5px solid',
+                    background: vegActive ? 'rgba(22,163,74,0.18)' : 'rgba(255,255,255,0.03)',
+                    borderColor: vegActive ? '#16a34a' : 'rgba(255,255,255,0.08)',
+                    color: vegActive ? '#22c55e' : '#888',
+                    boxShadow: vegActive ? '0 0 0 3px rgba(22,163,74,0.15)' : 'none'
                 }}
             >
-                <div style={{ 
+                <div style={{
                     width: '12px', height: '12px', borderRadius: '3px', border: '1.5px solid #16a34a',
                     background: vegActive ? '#16a34a' : 'transparent'
                 }} />
@@ -205,16 +206,18 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu
             </button>
 
             {/* Non-Veg Button */}
-            <button 
-                onClick={() => { 
-                    setNonVegActive(!nonVegActive);
-                    setVegActive(false); 
+            <button
+                type="button"
+                onClick={() => {
+                    setNonVegActive(prev => !prev);
+                    setVegActive(false);
                 }}
-                style={{ 
-                    height: '36px', padding: '0 16px', borderRadius: '999px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.2s', border: '1px solid',
-                    background: nonVegActive ? 'rgba(229,57,75,0.08)' : 'rgba(255,255,255,0.03)',
-                    borderColor: nonVegActive ? 'rgba(229,57,75,0.25)' : 'rgba(255,255,255,0.08)',
-                    color: nonVegActive ? '#e5394b' : '#666'
+                style={{
+                    height: '36px', padding: '0 16px', borderRadius: '999px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', border: '1.5px solid',
+                    background: nonVegActive ? 'rgba(229,57,75,0.18)' : 'rgba(255,255,255,0.03)',
+                    borderColor: nonVegActive ? '#e5394b' : 'rgba(255,255,255,0.08)',
+                    color: nonVegActive ? '#ff6b7a' : '#888',
+                    boxShadow: nonVegActive ? '0 0 0 3px rgba(229,57,75,0.15)' : 'none'
                 }}
             >
                 <div style={{ 
@@ -289,7 +292,7 @@ const MenuPage = ({ cart, addToCart, removeFromCart, tableNumber, prefetchedMenu
                                 >
                                     <Utensils size={32} color="rgba(255,255,255,0.05)" />
                                     <span style={{ fontSize: '13px', color: '#444' }}>
-                                        No {vegActive ? 'veg' : 'non-veg'} items in this category
+                                        {vegActive ? 'No veg items in this category' : nonVegActive ? 'No non-veg items in this category' : 'No items in this category'}
                                     </span>
                                 </motion.div>
                             ) : (
