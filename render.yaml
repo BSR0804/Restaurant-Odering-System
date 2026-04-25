@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: kc-restaurant-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DB
+        value: kc_restaurant
+      - key: RAZORPAY_KEY_ID
+        value: rzp_test_mock
+      - key: RAZORPAY_KEY_SECRET
+        value: rzp_secret_mock

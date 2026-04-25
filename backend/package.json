@@ -2,7 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,12 +11,14 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
-    "@supabase/supabase-js": "^2.101.1",
-    "better-sqlite3": "^12.8.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.0",
     "express": "^5.2.1",
+    "mongodb": "^6.21.0",
     "qrcode": "^1.5.4",
     "razorpay": "^2.9.6",
     "socket.io": "^4.8.3"

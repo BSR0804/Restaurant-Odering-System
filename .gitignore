@@ -28,6 +28,7 @@ backend/qrcodes/*.png
 # Editor and IDE
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 

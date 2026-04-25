@@ -60,7 +60,8 @@ A professional, real-time dining and operations ecosystem designed for modern re
 | Technology | Usage |
 | :--- | :--- |
 | **Node.js / Express** | High-concurrency server architecture. |
-| **Supabase (PostgreSQL)** | Persistent, ACID-compliant cloud data storage. |
+| **MongoDB Atlas** | Persistent, document-based cloud data storage. |
+| **Render** | Managed deploy platform for the API service. |
 | **Socket.io** | Event-driven signaling for order and inventory sync. |
 | **Dotenvx** | Secure cloud-key orchestration. |
 
@@ -70,14 +71,17 @@ A professional, real-time dining and operations ecosystem designed for modern re
 
 ### 1. Initialize the Neural Core (Backend)
 Navigate to the `backend` directory and configure your cloud keys:
-1. Create a `.env` file with your **SUPABASE_URL** and **SUPABASE_ANON_KEY**.
+1. Create a `.env` file with **MONGODB_URI** (Atlas SRV connection string) and optionally **MONGODB_DB** (defaults to `kc_restaurant`).
 2. Launch the server:
 ```bash
 cd backend
 npm install
 node server.js
 ```
-*The server automatically seeds the Cloud Menu if missing.*
+*The server automatically seeds the Grillz Point menu if the row count differs from the canonical list.*
+
+### Deploying to Render
+The repo includes a `render.yaml` blueprint at the root. Connect the repo in Render → New → Blueprint, then set the `MONGODB_URI` secret in the dashboard. The frontend reads `VITE_API_BASE_URL` (default falls back to `https://kc-restaurant-api.onrender.com`); set this in Vercel project settings to point at your Render URL.
 
 ### 2. Launch the Interface (Frontend)
 Navigate to the `frontend` directory and start the dev server:
@@ -97,7 +101,7 @@ npm run dev
 | **Customer Interface** | [https://restaurant-odering-system.vercel.app](https://restaurant-odering-system.vercel.app) |
 | **Admin Dashboard** | [https://restaurant-odering-system.vercel.app/admin](https://restaurant-odering-system.vercel.app/admin) |
 | **User Account** | [https://restaurant-odering-system.vercel.app/account](https://restaurant-odering-system.vercel.app/account) |
-| **Backend API (Railway)** | [https://food-api-production-5ac0.up.railway.app](https://food-api-production-5ac0.up.railway.app) |
+| **Backend API (Render)** | [https://kc-restaurant-api.onrender.com](https://kc-restaurant-api.onrender.com) |
 
 ### 🔐 Administrative Access
 - **Username**: `admin`

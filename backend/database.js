@@ -1,14 +1,32 @@
 require('dotenv').config();
-const { createClient } = require('@supabase/supabase-js');
+const { MongoClient } = require('mongodb');
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const uri = process.env.MONGODB_URI;
+const dbName = process.env.MONGODB_DB || 'kc_restaurant';
 
-if (!supabaseUrl || !supabaseKey) {
-    console.error("Missing SUPABASE_URL or SUPABASE_ANON_KEY in .env");
+if (!uri) {
+    console.error("Missing MONGODB_URI in .env");
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const client = new MongoClient(uri, {
+    serverSelectionTimeoutMS: 8000,
+    retryWrites: true,
+});
+
+let db = null;
+
+const connectDB = async () => {
+    if (db) return db;
+    await client.connect();
+    db = client.db(dbName);
+    console.log(`🍃 MongoDB connected: ${dbName}`);
+    return db;
+};
+
+const getDB = () => {
+    if (!db) throw new Error('DB not initialized — call connectDB() first');
+    return db;
+};
 
 // Grillz Point — Reliance Mall, Sec-13 Dwarka
 const GRILLZ_POINT_MENU = [
@@ -202,32 +220,37 @@ const GRILLZ_POINT_MENU = [
     { name: 'Kulhad Tea', category: 'Beverages', price: 49, type: 'veg', is_available: true },
 ];
 
-// Automated Cloud Seeding Engine — replaces menu when count differs from canonical list
-const seedCloudMenu = async () => {
+const seedMenu = async () => {
     try {
-        const { data: existing, error: countError } = await supabase.from('menu').select('id, name');
-        if (countError) throw countError;
+        const menu = db.collection('menu');
+        const count = await menu.countDocuments();
+        const target = GRILLZ_POINT_MENU.length;
 
-        const targetCount = GRILLZ_POINT_MENU.length;
-        if (existing && existing.length === targetCount) {
-            console.log(`📊 Cloud Menu: Already in sync (${targetCount} items).`);
+        if (count === target) {
+            console.log(`📊 Menu in sync (${target} items).`);
             return;
         }
 
-        console.log(`☁️ Reseeding Supabase Cloud Menu — found ${existing?.length || 0} items, target ${targetCount}...`);
-
-        if (existing && existing.length > 0) {
-            const { error: delError } = await supabase.from('menu').delete().gte('id', 0);
-            if (delError) throw delError;
-            console.log(`🗑️  Cleared ${existing.length} stale menu rows.`);
+        console.log(`☁️ Reseeding menu — found ${count}, target ${target}...`);
+        if (count > 0) {
+            await menu.deleteMany({});
+            console.log(`🗑️  Cleared ${count} stale rows.`);
         }
-
-        const { error } = await supabase.from('menu').insert(GRILLZ_POINT_MENU);
-        if (error) throw error;
-        console.log(`✅ Cloud Menu Seeded: ${targetCount} Grillz Point items.`);
+        await menu.insertMany(GRILLZ_POINT_MENU);
+        console.log(`✅ Seeded ${target} Grillz Point items.`);
     } catch (err) {
-        console.error("❌ Cloud Seed Error:", err.message);
+        console.error("❌ Seed error:", err.message);
     }
 };
 
-module.exports = { supabase, seedCloudMenu };
+const ensureIndexes = async () => {
+    try {
+        await db.collection('orders').createIndex({ created_at: -1 });
+        await db.collection('orders').createIndex({ user_email: 1, created_at: -1 });
+        await db.collection('orders').createIndex({ status: 1 });
+    } catch (err) {
+        console.error("Index error:", err.message);
+    }
+};
+
+module.exports = { connectDB, getDB, seedMenu, ensureIndexes };
