@@ -10,7 +10,7 @@ const LandingPage = () => {
     const [bgIndex, setBgIndex] = useState(0);
     const [showNameModal, setShowNameModal] = useState(false);
     const [customName, setCustomName] = useState('');
-    const backgrounds = ['/restaurant_bg.webp', '/restaurant_crowd.jpg'];
+    const backgrounds = ['/grillz-point.webp'];
 
     useEffect(() => {
         const interval = setInterval(() => {
