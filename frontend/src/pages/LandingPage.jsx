@@ -85,7 +85,7 @@ const LandingPage = () => {
 
                 <div className="container" style={{ position: 'relative', zIndex: 10 }}>
                     <motion.div initial="hidden" animate="visible" variants={fadeIn}>
-                        <h1 style={{ fontWeight: '800', textTransform: 'uppercase', marginBottom: '32px', letterSpacing: '0.2em' }}>KC <br />RESTAURANT</h1>
+                        <h1 style={{ fontWeight: '800', textTransform: 'uppercase', marginBottom: '32px', letterSpacing: '0.2em' }}>GRILLZ <br />POINT</h1>
                         <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '18px', fontWeight: '400', marginBottom: '40px', letterSpacing: '0.05em' }}>
                             Scan. Order. Enjoy. No waiters, no waiting.
                         </p>
@@ -142,18 +142,16 @@ const LandingPage = () => {
 
             <footer style={{ padding: '40px 0', borderTop: '1px solid var(--card-border)', background: '#0A0A0B' }}>
                 <div className="container" style={{ textAlign: 'center' }}>
-                    <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.3em', marginBottom: '12px', fontWeight: '700' }}>KC RESTAURANT</h3>
+                    <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.3em', marginBottom: '12px', fontWeight: '700' }}>GRILLZ POINT</h3>
 
-                    
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '20px', color: '#888', fontSize: '14px', maxWidth: '600px', margin: '0 auto 20px' }}>
                         <span style={{ color: 'white', fontWeight: '500', lineHeight: '1.5', textAlign: 'center' }}>
-                            Near Ramphal Chowk Rd, Opposite to Vandana Printers, Block C, Sector 7 Dwarka, Dwarka, New Delhi, Delhi, 110077
+                            Reliance Mall, Nagafgarh, Sector 13, Kakrola, Delhi, 110078
                         </span>
                     </div>
 
-
                     <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', letterSpacing: '0.05em' }}>
-                        © 2026 KC RESTAURANT. ALL RIGHTS RESERVED.
+                        © 2026 GRILLZ POINT. ALL RIGHTS RESERVED.
                     </p>
                     <div style={{ display: 'inline-block', marginTop: '16px', padding: '10px 24px', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', background: 'rgba(255,255,255,0.05)' }}>
                         <p style={{ fontSize: '12px', color: '#ffffff', letterSpacing: '0.08em', margin: 0, fontWeight: '500' }}>

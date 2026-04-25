@@ -319,7 +319,7 @@ const AdminDashboard = () => {
         <div className="dashboard-wrapper">
             <aside className="dashboard-sidebar">
                 <div style={{ padding: '24px' }}>
-                    <div style={{ fontSize: '14px', fontWeight: '500', color: 'white' }}>Kitchen Caboodle</div>
+                    <div style={{ fontSize: '14px', fontWeight: '500', color: 'white' }}>Grillz Point</div>
                     <div style={{ fontSize: '11px', color: '#555', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Owner dashboard</div>
                 </div>
 
