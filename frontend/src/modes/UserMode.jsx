@@ -1,37 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import LandingPage from '../pages/LandingPage';
 import MenuPage from '../pages/MenuPage';
 import CheckoutPage from '../pages/CheckoutPage';
 import SuccessPage from '../pages/SuccessPage';
 import AccountPage from '../pages/AccountPage';
+import AdminDashboard from '../pages/AdminDashboard';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { socket, API_BASE_URL } from '../api';
+
+function Logo() {
+  const location = useLocation();
+  if (location.pathname === '/admin') return null;
+  return (
+    <div className="logo-container">
+      <Link to="/"><img src="/logo.jpg" alt="KC Logo" /></Link>
+    </div>
+  );
+}
 
 function UserMode() {
   const [cart, setCart] = useState([]);
   const [table, setTable] = useState(null);
   const [prefetchedMenu, setPrefetchedMenu] = useState(null);
 
-  // Removed redundant/silent prefetch so MenuPage handles it with full error reporting
-  useEffect(() => {
-    // We let MenuPage handle fetching to show proper loading/error states
-  }, []);
-
   useEffect(() => {
     socket.on('menu_update', (data) => {
       if (!data.is_available) {
-        // Automatically eject from cart if unavailable
         setCart(prev => prev.filter(item => item.id !== data.id));
       }
     });
-
     return () => socket.off('menu_update');
   }, []);
 
   useEffect(() => {
-    // Basic table detection from URL ?table=X
     const params = new URLSearchParams(window.location.search);
     const tableId = params.get('table');
     if (tableId) setTable(tableId);
@@ -62,17 +65,14 @@ function UserMode() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "345892520340-fbk4bokr6r5hkg5f46qn80rjcqvj3nqj.apps.googleusercontent.com"}>
       <Router>
-        <div className="logo-container">
-          <Link to="/">
-             <img src="/logo.jpg" alt="KC Logo" />
-          </Link>
-        </div>
+        <Logo />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/menu" element={<MenuPage cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} tableNumber={table} prefetchedMenu={prefetchedMenu} />} />
           <Route path="/checkout" element={<CheckoutPage cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} clearCart={clearCart} tableNumber={table} />} />
           <Route path="/success" element={<SuccessPage />} />
           <Route path="/account" element={<AccountPage />} />
+          <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </Router>
     </GoogleOAuthProvider>
