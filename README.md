@@ -104,7 +104,6 @@ npm run dev
 | :--- | :--- |
 | **Customer Interface** | [https://restaurant-odering-system.vercel.app](https://restaurant-odering-system.vercel.app) |
 | **Admin Dashboard** | [https://restaurant-odering-system.vercel.app/admin](https://restaurant-odering-system.vercel.app/admin) |
-| **User Account** | [https://restaurant-odering-system.vercel.app/account](https://restaurant-odering-system.vercel.app/account) |
 | **Backend API (Render)** | [https://restaurant-odering-system.onrender.com](https://restaurant-odering-system.onrender.com) |
 
 ### 🔐 Administrative Access
