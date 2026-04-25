@@ -73,10 +73,10 @@ const AccountPage = () => {
             <div className="glass" style={{ padding: '32px', borderRadius: '24px', marginBottom: '40px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                     <div style={{ position: 'relative' }}>
-                        <img 
-                            src={user?.picture || "/logo.jpg"} 
-                            alt="Profile" 
-                            style={{ width: '64px', height: '64px', borderRadius: '50%', border: '2px solid var(--accent)' }} 
+                        <img
+                            src={user?.picture}
+                            alt="Profile"
+                            style={{ width: '64px', height: '64px', borderRadius: '50%', border: '2px solid var(--accent)' }}
                         />
                     </div>
                     <div>

@@ -11,13 +11,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { socket, API_BASE_URL } from '../api';
 
 function Logo() {
-  const location = useLocation();
-  if (location.pathname === '/admin') return null;
-  return (
-    <div className="logo-container">
-      <Link to="/"><img src="/logo.jpg" alt="KC Logo" /></Link>
-    </div>
-  );
+  return null;
 }
 
 function UserMode() {
